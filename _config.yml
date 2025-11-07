@@ -8,7 +8,7 @@ subtitle: '刘钝根'
 description: '刘钝根的博客'
 keywords:
 author: John Doe
-language: ezh-CN
+language: zh-CN
 timezone: ''
 
 
@@ -17,7 +17,7 @@ timezone: ''
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://liudungenn.github.io/project'
-url: http://liudungenn.github.io
+url: https://liudungenn.github.io
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
