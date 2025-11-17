@@ -25,13 +25,22 @@ jobs:
         npm install hexo-cli -g
         npm install
         
-    - name: Configure Git for deploy
+    - name: Generate static files
+      run: |
+        hexo clean
+        hexo generate
+        
+    - name: Setup Git and Deploy
       run: |
         git config --global user.name "liudungenn"
         git config --global user.email "liudungen@163.com"
         
-    - name: Deploy using Hexo
-      run: |
-        hexo clean
-        hexo generate
-        hexo deploy
+        cd public
+        git init
+        git add -A
+        git commit -m "Deploy: $(date)"
+        
+        # 使用 GitHub Token 推送
+        git remote add origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git
+        git branch -M main
+        git push -f origin main
