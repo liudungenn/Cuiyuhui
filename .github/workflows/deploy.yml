@@ -36,6 +36,8 @@ jobs:
         git init
         git config user.name "liudungenn"
         git config user.email "liudungen@163.com"
+        # 关键修改：显式创建并切换到 main 分支
+        git checkout -b main
         git add -A
         git commit -m "Deploy: $(date +'%Y-%m-%d %H:%M:%S')"
         git push -f "https://liudungenn:${{ secrets.HEXO_DEPLOY_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
