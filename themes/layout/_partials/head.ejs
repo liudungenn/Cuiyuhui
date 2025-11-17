@@ -52,3 +52,64 @@ var ogConfig = Object.assign({ image: ogImage && url_for(ogImage) }, theme.open_
 
   <%- inject_point('head') %>
 </head>
+
+<!-- 导航栏代码（已添加 data-text 属性） -->
+<nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="<%- url_for('/') %>" data-text="刘钝根的博客">
+      <strong>刘钝根的博客</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        <% if (theme.menu && theme.menu.length) { %>
+          <% theme.menu.forEach(item => { %>
+            <% if (item.children && item.children.length) { %>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <i class="iconfont <%= item.icon %>"></i>
+                  <span><%= item.name %></span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                  <% item.children.forEach(subItem => { %>
+                    <a class="dropdown-item" href="<%- url_for(subItem.path) %>" target="<%= subItem.target || '_self' %>">
+                      <i class="iconfont <%= subItem.icon %>"></i>
+                      <span><%= subItem.name %></span>
+                    </a>
+                  <% }) %>
+                </div>
+              </li>
+            <% } else { %>
+              <li class="nav-item">
+                <a class="nav-link" href="<%- url_for(item.path) %>" target="<%= item.target || '_self' %>">
+                  <i class="iconfont <%= item.icon %>"></i>
+                  <span><%= item.name %></span>
+                </a>
+              </li>
+            <% } %>
+          <% }) %>
+        <% } %>
+
+        <li class="nav-item" id="search-btn">
+          <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+            <i class="iconfont icon-search"></i>
+          </a>
+        </li>
+
+        <% if (theme.dark_mode && theme.dark_mode.enable) { %>
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</nav>

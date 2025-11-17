@@ -1,0 +1,629 @@
+<%
+var banner_img_height = parseFloat(page.banner_img_height || theme.index.banner_img_height)
+var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.default ? theme.dark_mode.default : ''
+%>
+
+<!DOCTYPE html>
+<html lang="<%= config.language %>" <%= colorSchema ? `data-default-color-scheme=${colorSchema}` : '' %>>
+
+<%- partial('_partials/head.ejs') %>
+
+<body>
+  <%- inject_point('bodyBegin') %>
+
+  <header>
+    <%- inject_point('header') %>
+  </header>
+
+  <main>
+    <% if(is_post() || page.layout === '404') { %>
+      <%- body %>
+    <% } else { %>
+      <div class="container nopadding-x-md">
+        <div id="board"
+          <%- banner_img_height >= 100 && theme.banner && theme.banner.parallax ? 'style="margin-top: 0"' : '' %>>
+          <% if(page.layout === 'about') { %>
+            <div class="about-avatar">
+              <img src="<%= url_for(theme.about.avatar) %>" class="img-fluid" alt="avatar">
+            </div>
+          <% } %>
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                <%- body %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (theme.scroll_top_arrow.enable) { %>
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    <% } %>
+
+    <% if (theme.search.enable) { %>
+      <%- partial('_partials/search.ejs') %>
+    <% } %>
+
+    <% if (theme.custom_html) { %>
+      <div class="col-lg-7 mx-auto nopadding-x-md">
+        <div class="container custom mx-auto">
+          <%- theme.custom_html %>
+        </div>
+      </div>
+    <% } %>
+  </main>
+
+  <footer>
+    <%- inject_point('footer') %>
+  </footer>
+
+  <!-- Scripts -->
+  <%- partial('_partials/scripts.ejs') %>
+
+  <%- inject_point('bodyEnd') %>
+
+  <noscript>
+    <div class="noscript-warning"><%- __('noscript_warning') %></div>
+  </noscript>
+
+<!-- 放在 _layout.ejs 的 </body> 前面 -->
+
+<!-- 1. 烟花背景特效 -->
+<canvas id="fireworks" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:transparent;"></canvas>
+<script>
+const c = document.getElementById("fireworks");
+const ctx = c.getContext("2d");
+function resizeCanvas() {
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = Math.random() * 3 + 1;
+    this.vx = (Math.random() - 0.5) * 6;
+    this.vy = (Math.random() - 0.5) * 6;
+    this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
+    this.life = 30;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.size *= 0.95;
+    this.life--;
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let particles = [];
+document.addEventListener('mousemove', (e) => {
+  for (let i = 0; i < 3; i++) {
+    particles.push(new Particle(e.clientX, e.clientY));
+  }
+});
+
+function animateFireworks() {
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, c.width, c.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+  requestAnimationFrame(animateFireworks);
+}
+animateFireworks();
+</script>
+
+<!-- 放在 _layout.ejs 的 </body> 前面 -->
+
+<!-- 1. 原有鼠标烟花背景特效（保留不变） -->
+<canvas id="fireworks" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:transparent;"></canvas>
+<script>
+const c = document.getElementById("fireworks");
+const ctx = c.getContext("2d");
+function resizeCanvas() {
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = Math.random() * 3 + 1;
+    this.vx = (Math.random() - 0.5) * 6;
+    this.vy = (Math.random() - 0.5) * 6;
+    this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
+    this.life = 30;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.size *= 0.95;
+    this.life--;
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let particles = [];
+document.addEventListener('mousemove', (e) => {
+  for (let i = 0; i < 3; i++) {
+    particles.push(new Particle(e.clientX, e.clientY));
+  }
+});
+
+function animateFireworks() {
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, c.width, c.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+  requestAnimationFrame(animateFireworks);
+}
+animateFireworks();
+</script>
+
+<!-- 放在 _layout.ejs 的 </body> 前面 -->
+
+<!-- 1. 原有鼠标烟花背景特效（保留不变） -->
+<canvas id="fireworks" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:transparent;"></canvas>
+<script>
+const c = document.getElementById("fireworks");
+const ctx = c.getContext("2d");
+function resizeCanvas() {
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = Math.random() * 3 + 1;
+    this.vx = (Math.random() - 0.5) * 6;
+    this.vy = (Math.random() - 0.5) * 6;
+    this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
+    this.life = 30;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.size *= 0.95;
+    this.life--;
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let particles = [];
+document.addEventListener('mousemove', (e) => {
+  for (let i = 0; i < 3; i++) {
+    particles.push(new Particle(e.clientX, e.clientY));
+  }
+});
+
+function animateFireworks() {
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, c.width, c.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+  requestAnimationFrame(animateFireworks);
+}
+animateFireworks();
+</script>
+
+<!-- 2. banner 背景（图片/视频双模式，可快速切换）+ hover 烟花特效 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ========== 核心切换开关：改这里就能换图片/视频 ==========
+  const useVideoBanner = true; // true=用视频，false=用图片
+  // ======================================================
+  
+  const banner = document.getElementById('banner');
+  if (!banner) return;
+  
+  // 模式1：使用视频背景
+  if (useVideoBanner) {
+    banner.style.background = 'none';
+    const video = document.createElement('video');
+    video.src = '/video/banner-video.mp4'; // 视频路径
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true;
+    video.playbackRate = 0.8;
+    video.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    `;
+    banner.appendChild(video);
+    // 视频加载失败降级为图片
+    video.addEventListener('error', () => {
+      setImageBanner();
+    });
+  } 
+  // 模式2：使用图片背景（原来的方式）
+  else {
+    setImageBanner();
+  }
+
+  // 图片背景设置函数（复用逻辑）
+  function setImageBanner() {
+    banner.style.background = 'url(/img/default.png) no-repeat center center';
+    banner.style.backgroundSize = 'cover';
+  }
+
+  // banner 鼠标 hover 烟花特效（保留不变）
+  const canvas = document.createElement('canvas');
+  canvas.id = 'banner-fireworks';
+  canvas.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;background:transparent;";
+  banner.appendChild(canvas);
+  
+  function resizeBannerCanvas() {
+    const rect = banner.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    canvas.style.top = `${rect.top}px`;
+    canvas.style.left = `${rect.left}px`;
+  }
+  resizeBannerCanvas();
+  window.addEventListener('resize', resizeBannerCanvas);
+  
+  const ctx2 = canvas.getContext("2d");
+  let bannerParticles = [];
+  let isHoverBanner = false;
+  let hoverX = 0, hoverY = 0;
+  
+  banner.addEventListener('mouseenter', () => isHoverBanner = true);
+  banner.addEventListener('mouseleave', () => isHoverBanner = false);
+  banner.addEventListener('mousemove', (e) => {
+    const rect = banner.getBoundingClientRect();
+    hoverX = e.clientX - rect.left;
+    hoverY = e.clientY - rect.top;
+  });
+  
+  function createBannerParticle() {
+    if (!isHoverBanner) return;
+    const centerX = hoverX;
+    const centerY = hoverY;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const distance = Math.random() * 15 + 5;
+      bannerParticles.push({
+        x: centerX + Math.cos(angle) * distance,
+        y: centerY + Math.sin(angle) * distance,
+        size: Math.random() * 3 + 2,
+        vx: Math.cos(angle) * (Math.random() * 2 + 1),
+        vy: Math.sin(angle) * (Math.random() * 2 + 1),
+        color: `rgb(${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)})`,
+        life: Math.random() * 30 + 20
+      });
+    }
+  }
+  
+  setInterval(createBannerParticle, 100);
+  
+  function animateBannerFireworks() {
+    ctx2.clearRect(0, 0, canvas.width, canvas.height);
+    if (isHoverBanner) {
+      ctx2.fillStyle = "rgba(0,0,0,0.1)";
+      ctx2.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    for (let i = bannerParticles.length - 1; i >= 0; i--) {
+      const p = bannerParticles[i];
+      ctx2.fillStyle = p.color;
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx2.fill();
+      
+      p.x += p.vx;
+      p.y += p.vy;
+      p.size *= 0.97;
+      p.life--;
+      
+      if (p.life <= 0) bannerParticles.splice(i, 1);
+    }
+    requestAnimationFrame(animateBannerFireworks);
+  }
+  animateBannerFireworks();
+});
+</script>
+<!-- 3. 博文内容区域 动态网格特效（核心修改：只在博文内显示） -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 只在博文页面（post）或文章详情页生效
+  if (!document.querySelector('.post-content') && !document.querySelector('.index-info')) return;
+  
+  // 创建网格canvas，插入到博文内容区域
+  const contentContainer = document.querySelector('.post-content') || document.querySelector('#board .container');
+  const canvas = document.createElement('canvas');
+  canvas.id = 'gridCanvas';
+  canvas.style.cssText = `
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:0;
+    background:transparent; /* 透明背景，不遮挡博文内容 */
+  `;
+  contentContainer.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  
+  let width, height;
+  const gap = 30; // 网格间距
+  let mouse = { x: null, y: null, radius: 150 };
+  let containerRect; // 博文区域位置信息
+
+  // 初始化画布尺寸（跟随博文区域大小）
+  function resizeCanvas() {
+    containerRect = contentContainer.getBoundingClientRect();
+    // 相对于父容器定位，获取父容器的偏移
+    const parentStyle = window.getComputedStyle(contentContainer);
+    const parentPaddingTop = parseInt(parentStyle.paddingTop) || 0;
+    const parentPaddingLeft = parseInt(parentStyle.paddingLeft) || 0;
+    
+    width = containerRect.width - parentPaddingLeft * 2;
+    height = containerRect.height - parentPaddingTop * 2;
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.top = `${parentPaddingTop}px`;
+    canvas.style.left = `${parentPaddingLeft}px`;
+  }
+  
+  // 确保博文内容加载完成后再初始化
+  setTimeout(resizeCanvas, 100);
+  window.addEventListener('resize', resizeCanvas);
+
+  // 绘制网格（优化颜色，不遮挡文字）
+  function drawGrid() {
+    ctx.clearRect(0, 0, width, height);
+    
+    // 浅粉色网格，透明度降低，避免干扰阅读
+    ctx.strokeStyle = 'rgba(255, 183, 200, 0.2)';
+    ctx.lineWidth = 1;
+
+    // 横线
+    for (let y = 0; y < height; y += gap) {
+      ctx.beginPath();
+      let offsetY = 0;
+      if (mouse.x !== null && mouse.y !== null) {
+        // 转换鼠标坐标到网格canvas内
+        const relativeX = mouse.x - containerRect.left;
+        const relativeY = mouse.y - containerRect.top;
+        const dist = Math.abs(relativeY - y);
+        if (dist < mouse.radius && relativeX >= 0 && relativeX <= width) {
+          const ratio = 1 - (dist / mouse.radius);
+          offsetY = Math.sin(ratio * Math.PI) * 15 * (relativeX < width/2 ? -1 : 1);
+        }
+      }
+      ctx.moveTo(0, y);
+      for (let x = 0; x < width; x += gap) {
+        const x2 = x + gap;
+        const y2 = y + offsetY * Math.sin(x / width * Math.PI);
+        ctx.lineTo(x2, y2);
+      }
+      ctx.stroke();
+    }
+
+    // 竖线
+    for (let x = 0; x < width; x += gap) {
+      ctx.beginPath();
+      let offsetX = 0;
+      if (mouse.x !== null && mouse.y !== null) {
+        const relativeX = mouse.x - containerRect.left;
+        const relativeY = mouse.y - containerRect.top;
+        const dist = Math.abs(relativeX - x);
+        if (dist < mouse.radius && relativeY >= 0 && relativeY <= height) {
+          const ratio = 1 - (dist / mouse.radius);
+          offsetX = Math.sin(ratio * Math.PI) * 15 * (relativeY < height/2 ? -1 : 1);
+        }
+      }
+      ctx.moveTo(x, 0);
+      for (let y = 0; y < height; y += gap) {
+        const y2 = y + gap;
+        const x2 = x + offsetX * Math.sin(y / height * Math.PI);
+        ctx.lineTo(x2, y2);
+      }
+      ctx.stroke();
+    }
+  }
+
+  // 动画循环
+  function animate() {
+    drawGrid();
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // 鼠标移动监听（只在博文区域内才触发）
+  window.addEventListener('mousemove', (e) => {
+    if (!containerRect) return;
+    // 判断鼠标是否在博文区域内
+    if (
+      e.x >= containerRect.left && 
+      e.x <= containerRect.right && 
+      e.y >= containerRect.top && 
+      e.y <= containerRect.bottom
+    ) {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    } else {
+      mouse.x = null;
+      mouse.y = null; // 鼠标离开博文区域，网格恢复原状
+    }
+  });
+});
+</script>
+<!-- 3. 博文标题点击炸开特效（保留不变） -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const postTitles = document.querySelectorAll('.index-header a');
+  
+  postTitles.forEach(title => {
+    title.style.opacity = 1;
+  });
+  
+  postTitles.forEach(title => {
+    title.addEventListener('click', function(e) {
+      const titleText = this.textContent.trim();
+      if (!titleText) return;
+      
+      e.preventDefault();
+      const targetUrl = this.href;
+      const rect = this.getBoundingClientRect();
+      
+      this.style.opacity = 0;
+      
+      for (let i = 0; i < titleText.length; i++) {
+        for (let j = 0; j < 6; j++) {
+          const particle = document.createElement('span');
+          particle.textContent = titleText[i];
+          particle.style.cssText = `
+            position: fixed;
+            left: ${rect.left + i * 14 + Math.random() * 8}px;
+            top: ${rect.top + Math.random() * 10 - 5}px;
+            color: rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0});
+            font-size: ${14 + Math.random() * 6}px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 9999;
+            transform: rotate(${Math.random() * 30 - 15}deg);
+            transition: all 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+          `;
+          document.body.appendChild(particle);
+          
+          setTimeout(() => {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 30 + Math.random() * 40;
+            particle.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) rotate(${Math.random()*60-30}deg)`;
+            particle.style.opacity = 0;
+          }, 30);
+          
+          setTimeout(() => particle.remove(), 500);
+        }
+      }
+      
+      setTimeout(() => {
+        this.style.opacity = 1;
+        window.location.href = targetUrl;
+      }, 300);
+    });
+  });
+
+  window.addEventListener('popstate', function() {
+    postTitles.forEach(title => {
+      title.style.opacity = 1;
+    });
+  });
+});
+</script>
+
+<!-- 4. 导航栏 + banner 文字样式（保留不变） -->
+<style>
+.navbar-brand strong {
+  color: #fff !important;
+  font-weight: bold !important;
+  transition: all 0.3s ease !important;
+}
+.navbar-brand:hover strong {
+  background: linear-gradient(90deg, 
+    #ff0000, #ff9900, #ffff00, 
+    #33cc33, #3366ff, #9933ff, #ff33cc
+  ) !important;
+  background-size: 300% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  animation: rainbow 2s linear infinite !important;
+}
+
+.nav-link span {
+  color: #fff !important;
+  transition: all 0.3s ease !important;
+}
+.nav-link:hover span {
+  background: linear-gradient(90deg, 
+    #ff0000, #ff9900, #ffff00, 
+    #33cc33, #3366ff, #9933ff, #ff33cc
+  ) !important;
+  background-size: 300% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  animation: rainbow 2s linear infinite !important;
+}
+
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.navbar-brand, .nav-link {
+  background: none !important;
+  color: #fff !important;
+}
+.navbar-brand:focus strong,
+.nav-link:focus span {
+  color: #fff !important;
+  outline: none !important;
+}
+
+.index-header a {
+  display: inline-block !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.banner .mask {
+  background-color: rgba(0,0,0,0.4) !important;
+}
+.banner-text span {
+  color: #fff !important;
+  font-weight: bold !important;
+  text-shadow: 0 0 8px rgba(0,0,0,0.8) !important;
+}
+</style>
+</body>
+
+</html>
