@@ -25,25 +25,13 @@ jobs:
         npm install hexo-cli -g
         npm install
         
-    - name: Generate static files
-      run: |
-        hexo clean
-        hexo generate
-        
-    - name: Setup Git identity
+    - name: Configure Git for deploy
       run: |
         git config --global user.name "liudungenn"
         git config --global user.email "liudungen@163.com"
         
-    - name: Deploy to GitHub Pages
+    - name: Deploy using Hexo
       run: |
-        cd public
-        git init
-        git config user.name "liudungenn"
-        git config user.email "liudungen@163.com"
-        git checkout -b main
-        git add -A
-        git commit -m "Deploy to GitHub Pages - $(date)"
-        # 使用 GitHub Token 进行认证
-        git push -f "https://liudungenn:${{ secrets.GITHUB_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
-
+        hexo clean
+        hexo generate
+        hexo deploy
