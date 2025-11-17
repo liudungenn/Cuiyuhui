@@ -46,3 +46,4 @@ jobs:
         git commit -m "Deploy to GitHub Pages - $(date)"
         # 使用 GitHub Token 进行认证
         git push -f "https://liudungenn:${{ secrets.GITHUB_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
+
