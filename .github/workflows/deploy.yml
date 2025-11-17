@@ -39,7 +39,7 @@ jobs:
       run: |
         cd public
         git init
-        git checkout -b main  # 关键修改：显式创建 main 分支
+        git checkout -b main
         git add -A
         git commit -m "Deploy to GitHub Pages"
-        git push -f https://github.com/liudungenn/liudungenn.github.io.git main
+        git push -f https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git main
