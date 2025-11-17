@@ -17,7 +17,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '14'
         cache: 'npm'
         
     - name: Install dependencies
@@ -42,3 +42,4 @@ jobs:
         git add -A
         git commit -m "Deploy to GitHub Pages"
         git push -f https://github.com/liudungenn/liudungenn.github.io.git main:main
+
