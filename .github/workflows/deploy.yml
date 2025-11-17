@@ -30,17 +30,12 @@ jobs:
         hexo clean
         hexo generate
         
-    - name: Setup Git and Deploy
+    - name: Deploy to GitHub Pages
       run: |
-        git config --global user.name "liudungenn"
-        git config --global user.email "liudungen@163.com"
-        
         cd public
         git init
+        git config user.name "liudungenn"
+        git config user.email "liudungen@163.com"
         git add -A
-        git commit -m "Deploy: $(date)"
-        
-        # 使用 GitHub Token 推送
-        git remote add origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git
-        git branch -M main
-        git push -f origin main
+        git commit -m "Deploy: $(date +'%Y-%m-%d %H:%M:%S')"
+        git push -f "https://liudungenn:${{ secrets.HEXO_DEPLOY_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
