@@ -2,7 +2,7 @@ name: Deploy Hexo to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]  # 改为 master
 
 jobs:
   build-and-deploy:
@@ -42,4 +42,3 @@ jobs:
         git add -A
         git commit -m "Deploy to GitHub Pages"
         git push -f https://github.com/liudungenn/liudungenn.github.io.git main:main
-
