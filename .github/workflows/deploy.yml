@@ -30,11 +30,19 @@ jobs:
         hexo clean
         hexo generate
         
+    - name: Setup Git identity
+      run: |
+        git config --global user.name "liudungenn"
+        git config --global user.email "liudungen@163.com"
+        
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
-        publish_branch: main
-        user_name: 'liudungenn'
-        user_email: 'liudungen@163.com'
+      run: |
+        cd public
+        git init
+        git config user.name "liudungenn"
+        git config user.email "liudungen@163.com"
+        git checkout -b main
+        git add -A
+        git commit -m "Deploy to GitHub Pages - $(date)"
+        # 使用 GitHub Token 进行认证
+        git push -f "https://liudungenn:${{ secrets.GITHUB_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
