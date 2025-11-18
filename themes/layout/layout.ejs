@@ -481,263 +481,106 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-</script>
-<!-- 6. 背景音乐播放器（免版权音乐版） -->
-<div id="music-player" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
-  <audio id="bg-music" loop style="display:none;">
-    <!-- 精选免版权背景音乐（多首备选） -->
-    <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg" data-name="科技氛围">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3" type="audio/mpeg" data-name="进取之心">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-gathering-of-the-tribes-174.mp3" type="audio/mpeg" data-name="部落聚会">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-sunny-happy-ukulele-117.mp3" type="audio/mpeg" data-name="快乐尤克里里">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-memory-lane-112.mp3" type="audio/mpeg" data-name="记忆小巷">
-    您的浏览器不支持音频元素
-  </audio>
-  
-  <div id="music-controls" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.95);padding:10px 15px;border-radius:25px;box-shadow:0 8px 32px rgba(0,0,0,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);">
-    <button id="music-toggle" style="
-      width:40px;height:40px;border-radius:50%;border:none;
-      background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color:white;cursor:pointer;font-size:16px;transition:all 0.3s ease;
-    " title="播放/暂停">▶</button>
-    
-    <div style="flex:1;min-width:120px;">
-      <div id="music-info" style="font-size:12px;color:#666;margin-bottom:4px;">背景音乐</div>
-      <div style="background:#eee;border-radius:3px;height:4px;overflow:hidden;">
-        <div id="music-progress" style="height:100%;background:linear-gradient(90deg, #667eea, #764ba2);width:0%;transition:width 0.1s;"></div>
-      </div>
-    </div>
-    
-    <div style="display:flex;align-items:center;gap:5px;">
-      <button id="prev-music" style="background:none;border:none;cursor:pointer;font-size:12px;color:#666;" title="上一首">⏮</button>
-      <button id="next-music" style="background:none;border:none;cursor:pointer;font-size:12px;color:#666;" title="下一首">⏭</button>
-      <button id="volume-btn" style="background:none;border:none;cursor:pointer;font-size:14px;color:#666;" title="音量">🔊</button>
-    </div>
-  </div>
-</div>
-
+</script><!-- 枫叶飘落特效 -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const music = document.getElementById('bg-music');
-  const toggleBtn = document.getElementById('music-toggle');
-  const progressBar = document.getElementById('music-progress');
-  const musicInfo = document.getElementById('music-info');
-  const volumeBtn = document.getElementById('volume-btn');
-  const prevBtn = document.getElementById('prev-music');
-  const nextBtn = document.getElementById('next-music');
+document.addEventListener('DOMContentLoaded', () => {
+  // 创建画布（放在所有内容下方，不遮挡交互）
+  const canvas = document.createElement('canvas');
+  canvas.id = 'mapleLeafCanvas';
+  canvas.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* 低于其他内容，不影响点击 */
+    pointer-events: none;
+  `;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
   
-  let isPlaying = false;
-  let userInteracted = false;
-  let currentTrack = 0;
-  const tracks = Array.from(music.querySelectorAll('source'));
-  
-  console.log(`找到 ${tracks.length} 首背景音乐`);
-  
-  // 标记用户已交互
-  function enableAudio() {
-    if (!userInteracted) {
-      userInteracted = true;
-      console.log('用户已与页面交互，可以播放音乐');
-    }
+  // 画布尺寸跟随窗口
+  let width, height;
+  function resizeCanvas() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
   }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
   
-  // 监听用户交互
-  document.addEventListener('click', enableAudio);
-  document.addEventListener('touchstart', enableAudio);
-  document.addEventListener('keydown', enableAudio);
+  // 枫叶图片（用base64避免额外请求，更轻量）
+  const leafImg = new Image();
+  // 枫叶图标（红色渐变枫叶，可直接用）
+  leafImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZTk1MDUwIiBkPSJNMzg0IDM1MkM0MjAuNiAzNTIgNDU0IDM3MiA0NTQgNDA2LjRDMzYwLjYgNDE2IDMwNCAzNTIuNCAzMDQgMzA3LjJDMzA0IDI2MiAzNjAuNiAyMDguOCA0MjQgMjE4LjRDMzkwLjYgMTA1LjYgMjcwLjYgMCAxNTYgMEMxMjUuNCAxMDUuNiA5NiAyMDguOCA2Mi42IDIxOC40QzEyNiAyMDguOCAxODIuNiAyNjIgMTgyLjYgMzA3LjJDMTgyLjYgMzUyLjQgMTI2IDQxNiAzMiA0MDYuNEMzMiAzNzIgNjUuNCAzNTIgMTAyLjYgMzUyQzE3NiAzNTIgMjAwIDM1MiAyMDAgMzUyQzIwMCAzNTIgMjU2IDM1MiAzMjAgMzUyWiIvPjwvc3ZnPg==';
   
-  // 切换到指定曲目
-  function switchTrack(trackIndex) {
-    if (trackIndex < 0) trackIndex = tracks.length - 1;
-    if (trackIndex >= tracks.length) trackIndex = 0;
-    
-    currentTrack = trackIndex;
-    const track = tracks[currentTrack];
-    music.src = track.src;
-    musicInfo.textContent = `背景音乐 - ${track.getAttribute('data-name')}`;
-    
-    console.log(`切换到: ${track.getAttribute('data-name')}`);
-    
-    // 如果正在播放，立即播放新曲目
-    if (isPlaying) {
-      music.play().catch(error => {
-        console.log('自动播放新曲目失败:', error);
-      });
+  // 枫叶类（控制飘落逻辑）
+  class MapleLeaf {
+    constructor() {
+      this.reset(); // 初始化位置和状态
     }
-  }
-  
-  // 更新播放进度
-  music.addEventListener('timeupdate', function() {
-    if (music.duration) {
-      const progress = (music.currentTime / music.duration) * 100;
-      progressBar.style.width = progress + '%';
-    }
-  });
-  
-  // 播放/暂停
-  toggleBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
     
-    if (isPlaying) {
-      music.pause();
-      isPlaying = false;
-      toggleBtn.innerHTML = '▶';
-      toggleBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-      console.log('音乐已暂停');
-    } else {
-      if (userInteracted) {
-        music.play().then(() => {
-          isPlaying = true;
-          toggleBtn.innerHTML = '⏸';
-          toggleBtn.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-          console.log('音乐开始播放:', tracks[currentTrack].getAttribute('data-name'));
-        }).catch(error => {
-          console.log('播放失败:', error);
-        });
-      } else {
-        // 提示用户先交互
-        const originalHTML = toggleBtn.innerHTML;
-        toggleBtn.innerHTML = '👆';
-        toggleBtn.style.background = 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)';
-        
-        setTimeout(() => {
-          toggleBtn.innerHTML = originalHTML;
-          toggleBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        }, 1000);
+    // 重置枫叶到顶部随机位置
+    reset() {
+      this.x = Math.random() * width; // 水平随机
+      this.y = -50 - Math.random() * 200; // 顶部外随机
+      this.size = 15 + Math.random() * 20; // 大小随机（15-35px）
+      this.speedY = 1 + Math.random() * 3; // 下落速度（1-4px/帧）
+      this.speedX = (Math.random() - 0.5) * 2; // 左右摇摆速度
+      this.rotation = Math.random() * Math.PI * 2; // 初始旋转角度
+      this.rotationSpeed = (Math.random() - 0.5) * 0.03; // 旋转速度
+    }
+    
+    // 更新位置和状态
+    update() {
+      this.y += this.speedY; // 下落
+      this.x += this.speedX; // 左右移动
+      this.rotation += this.rotationSpeed; // 旋转
+      
+      // 超出屏幕底部则重置
+      if (this.y > height + 50) {
+        this.reset();
       }
     }
-  });
-  
-  // 上一首/下一首
-  prevBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
-    switchTrack(currentTrack - 1);
-  });
-  
-  nextBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
-    switchTrack(currentTrack + 1);
-  });
-  
-  // 音量控制
-  volumeBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
     
-    if (music.volume > 0) {
-      music.volume = 0;
-      volumeBtn.innerHTML = '🔇';
-      volumeBtn.title = '音量: 静音';
-    } else {
-      music.volume = 0.3;
-      volumeBtn.innerHTML = '🔊';
-      volumeBtn.title = '音量: 30%';
+    // 绘制枫叶
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y); // 移动到当前位置
+      ctx.rotate(this.rotation); // 旋转
+      ctx.drawImage(
+        leafImg, 
+        -this.size/2, // 居中绘制
+        -this.size/2, 
+        this.size, 
+        this.size
+      );
+      ctx.restore();
     }
-  });
+  }
   
-  // 鼠标悬停效果
-  [toggleBtn, prevBtn, nextBtn, volumeBtn].forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-      this.style.transform = 'scale(1.1)';
+  // 创建枫叶实例（控制数量，避免卡顿）
+  const leaves = [];
+  const leafCount = 22; // 15片枫叶，性能友好
+  for (let i = 0; i < leafCount; i++) {
+    leaves.push(new MapleLeaf());
+  }
+  
+  // 动画循环
+  function animate() {
+    ctx.clearRect(0, 0, width, height); // 清空画布
+    leaves.forEach(leaf => {
+      leaf.update();
+      leaf.draw();
     });
-    
-    btn.addEventListener('mouseleave', function() {
-      this.style.transform = 'scale(1)';
-    });
-  });
+    requestAnimationFrame(animate);
+  }
   
-  // 音乐事件处理
-  music.addEventListener('loadeddata', function() {
-    console.log('音乐文件加载成功');
-    music.volume = 0.3; // 30%音量
-  });
-  
-  music.addEventListener('ended', function() {
-    // 循环播放
-    music.currentTime = 0;
-    music.play();
-  });
-  
-  music.addEventListener('error', function(e) {
-    console.error('音乐加载失败:', e);
-    // 自动切换到下一首
-    setTimeout(() => {
-      switchTrack(currentTrack + 1);
-    }, 1000);
-  });
-  
-  // 初始化第一首曲目
-  switchTrack(0);
-  
-  // 键盘快捷键
-  document.addEventListener('keydown', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    
-    switch(e.code) {
-      case 'Space':
-        e.preventDefault();
-        toggleBtn.click();
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        prevBtn.click();
-        break;
-      case 'ArrowRight':
-        e.preventDefault();
-        nextBtn.click();
-        break;
-      case 'KeyM':
-        e.preventDefault();
-        volumeBtn.click();
-        break;
-    }
-  });
-  
-  console.log('背景音乐播放器已加载完成！');
-  console.log('快捷键: 空格=播放/暂停, ←/→=切换曲目, M=静音');
+  // 等待枫叶图片加载完成后开始动画
+  leafImg.onload = animate;
 });
 </script>
-
-<style>
-/* 音乐播放器响应式设计 */
-@media (max-width: 768px) {
-  #music-controls {
-    padding: 8px 12px !important;
-  }
-  #music-info {
-    font-size: 10px !important;
-  }
-}
-
-/* 音乐播放器动画 */
-#music-player {
-  animation: slideInUp 0.5s ease-out;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 播放时的脉动效果 */
-#music-toggle.playing {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
 </style>
 </body>
 
