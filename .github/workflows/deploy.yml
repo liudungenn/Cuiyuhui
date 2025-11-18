@@ -32,11 +32,20 @@ jobs:
         
     - name: Deploy to GitHub Pages
       run: |
+        # 设置 Git 身份
+        git config --global user.name "liudungenn"
+        git config --global user.email "liudungen@163.com"
+        
+        # 进入生成的静态文件目录
         cd public
+        
+        # 初始化 Git 仓库并强制切换到 main 分支
         git init
-        git config user.name "liudungenn"
-        git config user.email "liudungen@163.com"
-        git checkout -b main
+        git branch -m main
+        
+        # 添加所有文件并提交
         git add -A
         git commit -m "Deploy: $(date +'%Y-%m-%d %H:%M:%S')"
-        git push -f "https://liudungenn:${{ secrets.HEXO_DEPLOY_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
+        
+        # 使用正确的认证方式推送到目标仓库
+        git push -f "https://x-access-token:${{ secrets.HEXO_DEPLOY_TOKEN }}@github.com/liudungenn/liudungenn.github.io.git" main
