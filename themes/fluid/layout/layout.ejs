@@ -233,95 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- 3. 博文内容区域 静态浅灰色网格（无跳舞效果，仅博文页显示） -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // 仅在博文页面显示（首页不显示）
-  const contentContainer = document.querySelector('.post-content');
-  if (!contentContainer) return;
-
-  // 关键：创建专门的背景容器，用于放置canvas
-  const bgContainer = document.createElement('div');
-  bgContainer.style.cssText = `
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  `;
-  // 给内容容器设置相对定位，作为背景容器的定位参考
-  contentContainer.style.position = 'relative';
-  // 把原有内容临时存起来
-  const originalContent = contentContainer.innerHTML;
-  // 清空内容容器，先放背景容器，再放回原有内容
-  contentContainer.innerHTML = '';
-  contentContainer.appendChild(bgContainer);
-  // 重新插入原有内容（会在背景容器上层）
-  contentContainer.insertAdjacentHTML('beforeend', originalContent);
-
-  // 创建网格canvas，插入到背景容器中
-  const canvas = document.createElement('canvas');
-  canvas.id = 'gridCanvas';
-  canvas.style.cssText = `
-    position:absolute;
-    top:0;
-    left:0;
-    z-index:0;
-    background:transparent;
-    pointer-events:none;
-  `;
-  bgContainer.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-
-  let width, height;
-  const gap = 30; // 网格间距
-
-  // 初始化尺寸
-  function resizeCanvas() {
-    const containerRect = contentContainer.getBoundingClientRect();
-    const parentStyle = window.getComputedStyle(contentContainer);
-    const parentPaddingTop = parseInt(parentStyle.paddingTop) || 0;
-    const parentPaddingLeft = parseInt(parentStyle.paddingLeft) || 0;
-
-    width = containerRect.width - parentPaddingLeft * 2;
-    height = containerRect.height - parentPaddingTop * 2;
-    canvas.width = width;
-    canvas.height = height;
-    canvas.style.top = `${parentPaddingTop}px`;
-    canvas.style.left = `${parentPaddingLeft}px`;
-
-    drawGrid(); // 尺寸变化时重绘
-  }
-
-  // 绘制静态网格（无互动变形）
-  function drawGrid() {
-    ctx.clearRect(0, 0, width, height);
-    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)'; // 浅灰色网格
-    ctx.lineWidth = 1;
-
-    // 横线（固定不变）
-    for (let y = 0; y < height; y += gap) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-
-    // 竖线（固定不变）
-    for (let x = 0; x < width; x += gap) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-  }
-
-  // 初始化
-  setTimeout(resizeCanvas, 100);
-  window.addEventListener('resize', resizeCanvas);
-});
-</script>
 
 <!-- 4. 博文标题点击炸开特效（保留） -->
 <script>
@@ -454,5 +365,6 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 </body>
+
 
 </html>
