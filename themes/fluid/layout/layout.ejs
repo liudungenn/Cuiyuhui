@@ -252,8 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   animateBannerFireworks();
 });
-</script>
-<!-- 宫崎骏风格互动黑猫（修复点击冲突） -->
+</script><!-- 宫崎骏风格互动黑猫（修复自动移动） -->
 <div id="cat-container" style="position: fixed; z-index: 9999; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none;"></div>
 
 <script>
@@ -261,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
 setTimeout(() => {
     const container = document.getElementById('cat-container');
 
-    // 创建猫元素（仅猫本身可交互，容器不遮挡）
+    // 创建猫元素
     const cat = document.createElement('div');
     cat.id = 'ghibli-cat';
     cat.style.cssText = `
@@ -270,11 +269,11 @@ setTimeout(() => {
         height: 100px;
         cursor: grab;
         transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        pointer-events: auto; /* 仅猫本身可交互 */
+        pointer-events: auto;
     `;
     container.appendChild(cat);
 
-    // 创建脚印容器（不遮挡点击）
+    // 创建脚印容器
     const pawContainer = document.createElement('div');
     pawContainer.id = 'paw-prints';
     pawContainer.style.cssText = `
@@ -283,18 +282,18 @@ setTimeout(() => {
         left: 0;
         width: 100%;
         height: 100%;
-        pointer-events: none; /* 脚印不影响点击 */
+        pointer-events: none;
     `;
     container.appendChild(pawContainer);
 
-    // 猫状态管理
+    // 猫状态管理（关键：默认开启自动移动）
     const catState = {
         x: Math.random() * (window.innerWidth - 120),
         y: Math.random() * (window.innerHeight - 100),
         directionX: Math.random() > 0.5 ? 1 : -1,
         directionY: Math.random() > 0.5 ? 1 : -1,
         speed: 1 + Math.random() * 1.2,
-        isMoving: true,
+        isMoving: true, // 确保初始为true
         isFlipped: false,
         isSitting: false,
         actionCooldown: 0,
@@ -357,22 +356,16 @@ setTimeout(() => {
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             border: 1px solid #e0e0e0;
             z-index: 10;
-            pointer-events: none; /* 对话气泡不影响点击 */
+            pointer-events: none;
         "></div>
     `;
 
     // 互动文本
     const speechTexts = [
-        "爸爸。",
-    "妈妈。",
-    "我想吃猫条呢。",
-    "喂喂喂！我需要被打屁屁。",
-    "大胆我呀是一只超勇敢的小猫咪呢。", 
-    "拖我到边缘，我会趴好哦～",
-    "被抓住啦！要带我去哪里？",
-    "贴在边上晒太阳真舒服～",
-    "你知道吗？我会自己找地方待着～",
-    "拖动的时候要小心我的尾巴呀～"
+        "我会自己到处走哦～",
+        "点击我可以停下休息～",
+        "拖我到边缘我会藏起来～",
+        "再拖我一下我就出来啦～"
     ];
 
     // 创建脚印
@@ -393,7 +386,6 @@ setTimeout(() => {
         `;
         pawContainer.appendChild(paw);
 
-        // 自动消失
         setTimeout(() => {
             paw.style.opacity = '0';
             setTimeout(() => paw.remove(), 3000);
@@ -403,28 +395,25 @@ setTimeout(() => {
     // 拖动功能
     cat.addEventListener('mousedown', (e) => {
         catState.isDragging = true;
-        catState.isMoving = false;
+        catState.isMoving = false; // 拖动时暂停移动
         cat.style.cursor = 'grabbing';
         
-        // 修正隐藏状态的偏移量
         const visibleX = catState.isEdgeHidden ? 
             (catState.isFlipped ? catState.x + 60 : catState.x) : 
             catState.x;
         catState.offsetX = e.clientX - visibleX;
         catState.offsetY = e.clientY - catState.y;
         
-        // 拖动时解除隐藏
         if (catState.isEdgeHidden) {
             catState.x = catState.isFlipped ? catState.x + 60 : catState.x;
             catState.isEdgeHidden = false;
             cat.style.left = `${catState.x}px`;
         }
-        e.preventDefault(); // 仅阻止猫本身的默认行为，不影响页面其他元素
+        e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!catState.isDragging) return;
-        // 拖动时完全显示
         catState.x = e.clientX - catState.offsetX;
         catState.y = e.clientY - catState.offsetY;
         catState.x = Math.max(-60, Math.min(catState.x, window.innerWidth - 60));
@@ -437,10 +426,11 @@ setTimeout(() => {
         if (!catState.isDragging) return;
         catState.isDragging = false;
         cat.style.cursor = 'grab';
-        checkEdgeSnap(); // 检查是否需要隐藏
+        checkEdgeSnap();
+        // 拖动结束后自动恢复移动（关键修复）
         setTimeout(() => {
             if (!catState.isSitting) catState.isMoving = true;
-        }, 3000);
+        }, 1000); // 缩短延迟，更快恢复移动
     });
 
     // 边缘半隐藏逻辑
@@ -450,7 +440,6 @@ setTimeout(() => {
         const windowHeight = window.innerHeight;
         const halfWidth = 60;
 
-        // 左边缘隐藏
         if (catState.x <= edgeTolerance && !catState.isEdgeHidden) {
             catState.x = -halfWidth;
             catState.isFlipped = false;
@@ -459,7 +448,6 @@ setTimeout(() => {
             cat.querySelector('.cat-tail').style.transform = 'rotate(-20deg)';
             catState.isEdgeHidden = true;
         }
-        // 右边缘隐藏
         else if (catState.x >= windowWidth - halfWidth - edgeTolerance && !catState.isEdgeHidden) {
             catState.x = windowWidth - halfWidth;
             catState.isFlipped = true;
@@ -468,12 +456,10 @@ setTimeout(() => {
             cat.querySelector('.cat-tail').style.transform = 'rotate(20deg)';
             catState.isEdgeHidden = true;
         }
-        // 取消隐藏
         else if (catState.x > edgeTolerance && catState.x < windowWidth - halfWidth - edgeTolerance) {
             catState.isEdgeHidden = false;
         }
 
-        // 上下边缘定位
         if (catState.y <= edgeTolerance) catState.y = 0;
         else if (catState.y >= windowHeight - 100 - edgeTolerance) catState.y = windowHeight - 100;
 
@@ -481,19 +467,21 @@ setTimeout(() => {
         cat.style.top = `${catState.y}px`;
     }
 
-    // 动画更新
+    // 动画更新（核心修复：简化移动条件）
     function updateCat() {
-        if (catState.isMoving && !catState.isSitting && catState.actionCooldown <= 0 && !catState.isDragging) {
+        // 只要没在拖动、没在冷却，就允许移动（移除不必要的限制）
+        if (catState.isMoving && !catState.isDragging && catState.actionCooldown <= 0) {
             const bounce = Math.sin(Date.now() * 0.005) * 2;
             cat.style.transform = `translateY(${bounce}px)`;
 
             const prevX = catState.x;
             const prevY = catState.y;
 
-            catState.x += catState.directionX * catState.speed;
-            catState.y += catState.directionY * catState.speed;
+            // 移动逻辑（增加速度随机性，更自然）
+            catState.x += catState.directionX * (catState.speed + Math.random() * 0.5);
+            catState.y += catState.directionY * (catState.speed + Math.random() * 0.5);
 
-            // 边界反弹（自动移动不隐藏）
+            // 边界反弹
             const safeXMin = 0;
             const safeXMax = window.innerWidth - 120;
             if (catState.x <= safeXMin || catState.x >= safeXMax) {
@@ -524,16 +512,17 @@ setTimeout(() => {
             cat.style.left = `${catState.x}px`;
             cat.style.top = `${catState.y}px`;
 
-            // 随机坐下
-            if (Math.random() < 0.0015) {
+            // 随机坐下（增加触发概率）
+            if (Math.random() < 0.003) {
                 catState.isSitting = true;
-                catState.actionCooldown = 300;
+                catState.actionCooldown = 200; // 缩短坐下时间
                 cat.querySelector('.cat-body').style.transform = catState.isFlipped ? 'scaleX(-1) translateY(5px)' : 'translateY(5px)';
             }
         } else if (catState.actionCooldown > 0) {
             catState.actionCooldown--;
             if (catState.actionCooldown === 0 && catState.isSitting) {
                 catState.isSitting = false;
+                catState.isMoving = true; // 坐下结束后强制恢复移动
                 cat.querySelector('.cat-body').style.transform = catState.isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
             }
         } else {
@@ -543,9 +532,9 @@ setTimeout(() => {
         requestAnimationFrame(updateCat);
     }
 
-    // 点击互动
+    // 点击互动（切换移动状态）
     cat.addEventListener('click', (e) => {
-        e.stopPropagation(); // 防止点击猫时触发页面其他点击事件
+        e.stopPropagation();
         if (catState.isSitting) {
             catState.isSitting = false;
             catState.isMoving = true;
@@ -587,81 +576,11 @@ setTimeout(() => {
         cat.style.top = `${catState.y}px`;
     });
 
-    // 初始化位置
+    // 初始化位置并启动移动
     cat.style.left = `${catState.x}px`;
     cat.style.top = `${catState.y}px`;
     updateCat();
-}, 1000); // 延迟1秒加载，优先加载博客内容
-</script>
-
-
-<!-- 5. 博文标题点击炸开特效 -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const postTitles = document.querySelectorAll('.index-header a');
-  
-  postTitles.forEach(title => {
-    title.style.opacity = 1;
-  });
-  
-  postTitles.forEach(title => {
-    title.addEventListener('click', function(e) {
-      const titleText = this.textContent.trim();
-      if (!titleText) return;
-      
-      e.preventDefault();
-      const targetUrl = this.href;
-      const rect = this.getBoundingClientRect();
-      
-      this.style.opacity = 0;
-      
-      for (let i = 0; i < titleText.length; i++) {
-        for (let j = 0; j < 4; j++) {
-          const particle = document.createElement('span');
-          particle.textContent = titleText[i];
-          // 适配深色/浅色模式
-          const isDark = document.documentElement.dataset.defaultColorScheme === 'dark';
-          const color = isDark 
-            ? `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`
-            : `rgb(${Math.random()*100+155|0},${Math.random()*100+155|0},${Math.random()*100+155|0})`;
-          particle.style.cssText = `
-            position: fixed;
-            left: ${rect.left + i * 14 + Math.random() * 8}px;
-            top: ${rect.top + Math.random() * 10 - 5}px;
-            color: ${color};
-            font-size: ${14 + Math.random() * 6}px;
-            font-weight: bold;
-            pointer-events: none;
-            z-index: 9999;
-            transform: rotate(${Math.random() * 30 - 15}deg);
-            transition: all 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-          `;
-          document.body.appendChild(particle);
-          
-          setTimeout(() => {
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 30 + Math.random() * 40;
-            particle.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) rotate(${Math.random()*60-30}deg)`;
-            particle.style.opacity = 0;
-          }, 30);
-          
-          setTimeout(() => particle.remove(), 500);
-        }
-      }
-      
-      setTimeout(() => {
-        this.style.opacity = 1;
-        window.location.href = targetUrl;
-      }, 300);
-    });
-  });
-
-  window.addEventListener('popstate', function() {
-    postTitles.forEach(title => {
-      title.style.opacity = 1;
-    });
-  });
-});
+}, 1000);
 </script>
 
 <!-- 6. 全局样式（优化层级和适配） -->
