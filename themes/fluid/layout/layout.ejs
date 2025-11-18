@@ -253,18 +253,15 @@ document.addEventListener('DOMContentLoaded', function() {
   animateBannerFireworks();
 });
 </script>
-
-<!-- 宫崎骏风格互动黑猫（边缘半隐藏效果） -->
-<div id="cat-container" style="position: fixed; z-index: 9999; pointer-events: none; width: 100%; height: 100%; top: 0; left: 0;"></div>
+<!-- 宫崎骏风格互动黑猫（修复点击冲突） -->
+<div id="cat-container" style="position: fixed; z-index: 9999; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none;"></div>
 
 <script>
 // 延迟加载，避免影响博客主内容加载
 setTimeout(() => {
-    // 创建猫元素容器
     const container = document.getElementById('cat-container');
-    container.style.pointerEvents = 'auto';
 
-    // 创建猫元素
+    // 创建猫元素（仅猫本身可交互，容器不遮挡）
     const cat = document.createElement('div');
     cat.id = 'ghibli-cat';
     cat.style.cssText = `
@@ -273,11 +270,11 @@ setTimeout(() => {
         height: 100px;
         cursor: grab;
         transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        pointer-events: auto;
+        pointer-events: auto; /* 仅猫本身可交互 */
     `;
     container.appendChild(cat);
 
-    // 创建脚印容器
+    // 创建脚印容器（不遮挡点击）
     const pawContainer = document.createElement('div');
     pawContainer.id = 'paw-prints';
     pawContainer.style.cssText = `
@@ -286,7 +283,7 @@ setTimeout(() => {
         left: 0;
         width: 100%;
         height: 100%;
-        pointer-events: none;
+        pointer-events: none; /* 脚印不影响点击 */
     `;
     container.appendChild(pawContainer);
 
@@ -360,16 +357,22 @@ setTimeout(() => {
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             border: 1px solid #e0e0e0;
             z-index: 10;
+            pointer-events: none; /* 对话气泡不影响点击 */
         "></div>
     `;
 
     // 互动文本
     const speechTexts = [
-        "拖我到边缘，我会藏起来一半～",
-        "把我拖出来就能看到全貌啦！",
-        "躲在边上好安全～",
-        "想出来玩吗？拖我一下～",
-        "这个角落真舒服～"
+        "爸爸。",
+    "妈妈。",
+    "我想吃猫条呢。",
+    "喂喂喂！我需要被打屁屁。",
+    "大胆我呀是一只超勇敢的小猫咪呢。", 
+    "拖我到边缘，我会趴好哦～",
+    "被抓住啦！要带我去哪里？",
+    "贴在边上晒太阳真舒服～",
+    "你知道吗？我会自己找地方待着～",
+    "拖动的时候要小心我的尾巴呀～"
     ];
 
     // 创建脚印
@@ -416,7 +419,7 @@ setTimeout(() => {
             catState.isEdgeHidden = false;
             cat.style.left = `${catState.x}px`;
         }
-        e.preventDefault();
+        e.preventDefault(); // 仅阻止猫本身的默认行为，不影响页面其他元素
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -541,7 +544,8 @@ setTimeout(() => {
     }
 
     // 点击互动
-    cat.addEventListener('click', () => {
+    cat.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止点击猫时触发页面其他点击事件
         if (catState.isSitting) {
             catState.isSitting = false;
             catState.isMoving = true;
