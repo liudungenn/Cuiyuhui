@@ -16,6 +16,15 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
   </header>
 
   <main>
+    <!-- 新增 banner 容器（特效载体，必须保留） -->
+    <div id="banner" style="position:relative; width:100%; height:400px; overflow:hidden;">
+      <!-- banner 标题可自行添加，示例： -->
+      <div class="banner-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; text-align:center;">
+        <span style="font-size:2.5rem; margin-bottom:1rem; display:block;">你的博客标题</span>
+        <span style="font-size:1.2rem;">这里可以放副标题或描述</span>
+      </div>
+    </div>
+
     <% if(is_post() || page.layout === '404') { %>
       <%- body %>
     <% } else { %>
@@ -69,7 +78,6 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
   <noscript>
     <div class="noscript-warning"><%- __('noscript_warning') %></div>
   </noscript>
-<!-- 放在 _layout.ejs 的 </body> 前面 -->
 
 <!-- 1. 全局鼠标烟花特效 -->
 <canvas id="fireworks" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:transparent;"></canvas>
@@ -90,7 +98,11 @@ class Particle {
     this.size = Math.random() * 2 + 1;
     this.vx = (Math.random() - 0.5) * 5;
     this.vy = (Math.random() - 0.5) * 5;
-    this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
+    // 适配深色/浅色模式
+    const isDark = document.documentElement.dataset.defaultColorScheme === 'dark';
+    this.color = isDark 
+      ? `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`
+      : `rgb(${Math.random()*100+155|0},${Math.random()*100+155|0},${Math.random()*100+155|0})`;
     this.life = 30;
   }
   update() {
@@ -132,14 +144,14 @@ animateFireworks();
 <!-- 2. Banner背景（图片/视频）+ Hover烟花 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const useVideoBanner = true; // true=视频，false=图片
+  const useVideoBanner = false; // 默认为图片模式（稳定），需要视频时改为true
   const banner = document.getElementById('banner');
   if (!banner) return;
   
   if (useVideoBanner) {
     banner.style.background = 'none';
     const video = document.createElement('video');
-    video.src = '/video/banner-video.mp4'; // 视频路径
+    video.src = '/video/banner-video.mp4'; // 视频路径：根目录/video文件夹下
     video.autoplay = true;
     video.loop = true;
     video.muted = true;
@@ -154,6 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
       z-index: -1;
     `;
     banner.appendChild(video);
+    // 视频加载失败自动降级为图片
     video.addEventListener('error', () => {
       setImageBanner();
     });
@@ -161,11 +174,13 @@ document.addEventListener('DOMContentLoaded', function() {
     setImageBanner();
   }
 
+  // 图片背景配置（默认生效）
   function setImageBanner() {
     banner.style.background = 'url(/img/default.png) no-repeat center center';
     banner.style.backgroundSize = 'cover';
   }
 
+  // Banner Hover烟花特效
   const canvas = document.createElement('canvas');
   canvas.id = 'banner-fireworks';
   canvas.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;background:transparent;";
@@ -201,13 +216,18 @@ document.addEventListener('DOMContentLoaded', function() {
     for (let i = 0; i < 6; i++) {
       const angle = (i / 8) * Math.PI * 2;
       const distance = Math.random() * 15 + 5;
+      // 适配深色/浅色模式
+      const isDark = document.documentElement.dataset.defaultColorScheme === 'dark';
+      const color = isDark 
+        ? `rgb(${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)})`
+        : `rgb(${Math.floor(Math.random()*100+155)},${Math.floor(Math.random()*100+155)},${Math.floor(Math.random()*100+155)})`;
       bannerParticles.push({
         x: centerX + Math.cos(angle) * distance,
         y: centerY + Math.sin(angle) * distance,
         size: Math.random() * 3 + 2,
         vx: Math.cos(angle) * (Math.random() * 2 + 1),
         vy: Math.sin(angle) * (Math.random() * 2 + 1),
-        color: `rgb(${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)})`,
+        color: color,
         life: Math.random() * 30 + 20
       });
     }
@@ -242,9 +262,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- 3. 枫叶飘落特效 -->
+<!-- 3. 枫叶飘落特效（带开关） -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  const enableMapleLeaf = true; // false 可关闭枫叶特效
+  if (!enableMapleLeaf) return;
+  
   const canvas = document.createElement('canvas');
   canvas.id = 'mapleLeafCanvas';
   canvas.style.cssText = `
@@ -253,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: -2; /* 层级低于全局烟花，避免覆盖 */
     pointer-events: none;
   `;
   document.body.appendChild(canvas);
@@ -269,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
   
+  // 枫叶SVG（无需额外图片）
   const leafImg = new Image();
   leafImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZTk1MDUwIiBkPSJNMzg0IDM1MkM0MjAuNiAzNTIgNDU0IDM3MiA0NTQgNDA2LjRDMzYwLjYgNDE2IDMwNCAzNTIuNCAzMDQgMzA3LjJDMzA0IDI2MiAzNjAuNiAyMDguOCA0MjQgMjE4LjRDMzkwLjYgMTA1LjYgMjcwLjYgMCAxNTYgMEMxMjUuNCAxMDUuNiA5NiAyMDguOCA2Mi42IDIxOC40QzEyNiAyMDguOCAxODIuNiAyNjIgMTgyLjYgMzA3LjJDMTgyLjYgMzUyLjQgMTI2IDQxNiAzMiA0MDYuNEMzMiAzNzIgNjUuNCAzNTIgMTAyLjYgMzUyQzE3NiAzNTIgMjAwIDM1MiAyMDAgMzUyQzIwMCAzNTIgMjU2IDM1MiAzMjAgMzUyWiIvPjwvc3ZnPg==';
   
@@ -307,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   const leaves = [];
-  const leafCount = 15;
+  const leafCount = 15; // 枫叶数量，可调整
   for (let i = 0; i < leafCount; i++) {
     leaves.push(new MapleLeaf());
   }
@@ -325,9 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- 4. 宫崎骏风格互动黑猫（带爪印） -->
+<!-- 4. 宫崎骏风格互动黑猫（带开关） -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  const enableCat = true; // false 可关闭黑猫特效
+  if (!enableCat) return;
+  
   const cat = document.createElement('div');
   cat.id = 'ghibli-cat';
   cat.style.cssText = `
@@ -790,11 +817,16 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let j = 0; j < 4; j++) {
           const particle = document.createElement('span');
           particle.textContent = titleText[i];
+          // 适配深色/浅色模式
+          const isDark = document.documentElement.dataset.defaultColorScheme === 'dark';
+          const color = isDark 
+            ? `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`
+            : `rgb(${Math.random()*100+155|0},${Math.random()*100+155|0},${Math.random()*100+155|0})`;
           particle.style.cssText = `
             position: fixed;
             left: ${rect.left + i * 14 + Math.random() * 8}px;
             top: ${rect.top + Math.random() * 10 - 5}px;
-            color: rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0});
+            color: ${color};
             font-size: ${14 + Math.random() * 6}px;
             font-weight: bold;
             pointer-events: none;
@@ -830,7 +862,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- 6. 全局样式 -->
+<!-- 6. 全局样式（优化层级和适配） -->
 <style>
 /* 导航栏彩虹效果 */
 .navbar-brand strong {
@@ -871,7 +903,7 @@ document.addEventListener('DOMContentLoaded', function() {
   100% { background-position: 300% 50%; }
 }
 
-/* 其他样式优化 */
+/* 基础样式优化 */
 .navbar-brand, .nav-link {
   background: none !important;
   color: #fff !important;
@@ -893,12 +925,21 @@ document.addEventListener('DOMContentLoaded', function() {
 .banner-text span {
   color: #fff !important;
   font-weight: bold !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8) !important; /* 文字加阴影，更清晰 */
 }
 
-/* 确保博文内容层级高于背景 */
-.post-content {
+/* 确保内容层级高于背景特效 */
+.post-content, .container {
   position: relative;
   z-index: 10;
+}
+
+/* 适配移动端 */
+@media (max-width: 768px) {
+  #banner { height: 300px !important; }
+  .banner-text span:first-child { font-size: 1.8rem !important; }
+  .banner-text span:last-child { font-size: 1rem !important; }
+  #ghibli-cat { width: 100px !important; height: 80px !important; } /* 移动端缩小黑猫 */
 }
 </style>
 </body>
