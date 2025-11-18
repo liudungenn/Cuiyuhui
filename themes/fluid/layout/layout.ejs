@@ -69,10 +69,9 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
   <noscript>
     <div class="noscript-warning"><%- __('noscript_warning') %></div>
   </noscript>
-
 <!-- 放在 _layout.ejs 的 </body> 前面 -->
 
-<!-- 1. 烟花背景特效（保留） -->
+<!-- 1. 全局鼠标烟花特效 -->
 <canvas id="fireworks" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:transparent;"></canvas>
 <script>
 const c = document.getElementById("fireworks");
@@ -88,9 +87,9 @@ class Particle {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.size = Math.random() * 3 + 1;
-    this.vx = (Math.random() - 0.5) * 6;
-    this.vy = (Math.random() - 0.5) * 6;
+    this.size = Math.random() * 2 + 1;
+    this.vx = (Math.random() - 0.5) * 5;
+    this.vy = (Math.random() - 0.5) * 5;
     this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
     this.life = 30;
   }
@@ -110,7 +109,7 @@ class Particle {
 
 let particles = [];
 document.addEventListener('mousemove', (e) => {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     particles.push(new Particle(e.clientX, e.clientY));
   }
 });
@@ -130,7 +129,7 @@ function animateFireworks() {
 animateFireworks();
 </script>
 
-<!-- 2. banner 背景（图片/视频双模式）+ hover 烟花特效（保留） -->
+<!-- 2. Banner背景（图片/视频）+ Hover烟花 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const useVideoBanner = true; // true=视频，false=图片
@@ -140,23 +139,33 @@ document.addEventListener('DOMContentLoaded', function() {
   if (useVideoBanner) {
     banner.style.background = 'none';
     const video = document.createElement('video');
-    video.src = '/video/banner-video.mp4';
+    video.src = '/video/banner-video.mp4'; // 视频路径
     video.autoplay = true;
     video.loop = true;
     video.muted = true;
     video.playbackRate = 0.8;
-    video.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;`;
+    video.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    `;
     banner.appendChild(video);
     video.addEventListener('error', () => {
-      banner.style.background = 'url(/img/default.png) no-repeat center center';
-      banner.style.backgroundSize = 'cover';
+      setImageBanner();
     });
   } else {
+    setImageBanner();
+  }
+
+  function setImageBanner() {
     banner.style.background = 'url(/img/default.png) no-repeat center center';
     banner.style.backgroundSize = 'cover';
   }
 
-  // banner hover 烟花
   const canvas = document.createElement('canvas');
   canvas.id = 'banner-fireworks';
   canvas.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;background:transparent;";
@@ -189,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isHoverBanner) return;
     const centerX = hoverX;
     const centerY = hoverY;
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 6; i++) {
       const angle = (i / 8) * Math.PI * 2;
       const distance = Math.random() * 15 + 5;
       bannerParticles.push({
@@ -233,20 +242,543 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- 3. 枫叶飘落特效 -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'mapleLeafCanvas';
+  canvas.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+  `;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  
+  let width, height;
+  function resizeCanvas() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  const leafImg = new Image();
+  leafImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZTk1MDUwIiBkPSJNMzg0IDM1MkM0MjAuNiAzNTIgNDU0IDM3MiA0NTQgNDA2LjRDMzYwLjYgNDE2IDMwNCAzNTIuNCAzMDQgMzA3LjJDMzA0IDI2MiAzNjAuNiAyMDguOCA0MjQgMjE4LjRDMzkwLjYgMTA1LjYgMjcwLjYgMCAxNTYgMEMxMjUuNCAxMDUuNiA5NiAyMDguOCA2Mi42IDIxOC40QzEyNiAyMDguOCAxODIuNiAyNjIgMTgyLjYgMzA3LjJDMTgyLjYgMzUyLjQgMTI2IDQxNiAzMiA0MDYuNEMzMiAzNzIgNjUuNCAzNTIgMTAyLjYgMzUyQzE3NiAzNTIgMjAwIDM1MiAyMDAgMzUyQzIwMCAzNTIgMjU2IDM1MiAzMjAgMzUyWiIvPjwvc3ZnPg==';
+  
+  class MapleLeaf {
+    constructor() {
+      this.reset();
+    }
+    
+    reset() {
+      this.x = Math.random() * width;
+      this.y = -50 - Math.random() * 200;
+      this.size = 15 + Math.random() * 20;
+      this.speedY = 1 + Math.random() * 3;
+      this.speedX = (Math.random() - 0.5) * 2;
+      this.rotation = Math.random() * Math.PI * 2;
+      this.rotationSpeed = (Math.random() - 0.5) * 0.03;
+    }
+    
+    update() {
+      this.y += this.speedY;
+      this.x += this.speedX;
+      this.rotation += this.rotationSpeed;
+      
+      if (this.y > height + 50) {
+        this.reset();
+      }
+    }
+    
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.drawImage(leafImg, -this.size/2, -this.size/2, this.size, this.size);
+      ctx.restore();
+    }
+  }
+  
+  const leaves = [];
+  const leafCount = 15;
+  for (let i = 0; i < leafCount; i++) {
+    leaves.push(new MapleLeaf());
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    leaves.forEach(leaf => {
+      leaf.update();
+      leaf.draw();
+    });
+    requestAnimationFrame(animate);
+  }
+  
+  leafImg.onload = animate;
+});
+</script>
 
-<!-- 4. 博文标题点击炸开特效（保留） -->
+<!-- 4. 宫崎骏风格互动黑猫（带爪印） -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cat = document.createElement('div');
+  cat.id = 'ghibli-cat';
+  cat.style.cssText = `
+    position: fixed;
+    width: 120px;
+    height: 100px;
+    z-index: 999;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  `;
+  document.body.appendChild(cat);
+
+  const pawContainer = document.createElement('div');
+  pawContainer.id = 'paw-prints';
+  pawContainer.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 998;
+    pointer-events: none;
+  `;
+  document.body.appendChild(pawContainer);
+
+  const catState = {
+    x: Math.random() * (window.innerWidth - 120),
+    y: Math.random() * (window.innerHeight - 100),
+    directionX: Math.random() > 0.5 ? 1 : -1,
+    directionY: Math.random() > 0.5 ? 1 : -1,
+    speed: 1 + Math.random() * 1.2,
+    isMoving: true,
+    isFlipped: false,
+    isSitting: false,
+    actionCooldown: 0,
+    lastPawPosition: 0,
+    pawInterval: 60
+  };
+
+  cat.innerHTML = `
+    <div class="cat-body" style="
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 0.3s ease;
+    ">
+      <!-- 躯干 -->
+      <div style="
+        position: absolute;
+        top: 40px;
+        left: 20px;
+        width: 80px;
+        height: 40px;
+        background: #000;
+        border-radius: 40% 50% 30% 30%;
+      "></div>
+      <!-- 头部 -->
+      <div style="
+        position: absolute;
+        top: 15px;
+        left: 30px;
+        width: 60px;
+        height: 45px;
+        background: #000;
+        border-radius: 55% 55% 50% 50%;
+      "></div>
+      <!-- 耳朵 -->
+      <div style="
+        position: absolute;
+        top: 5px;
+        left: 25px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 25px solid #000;
+        transform: rotate(-15deg);
+      ">
+        <div style="
+          position: absolute;
+          top: 10px;
+          left: -5px;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-bottom: 15px solid #e0e0e0;
+        "></div>
+      </div>
+      <div style="
+        position: absolute;
+        top: 5px;
+        left: 87px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 25px solid #000;
+        transform: rotate(15deg);
+      ">
+        <div style="
+          position: absolute;
+          top: 10px;
+          left: -5px;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-bottom: 15px solid #e0e0e0;
+        "></div>
+      </div>
+      <!-- 蝴蝶结 -->
+      <div style="
+        position: absolute;
+        top: 35px;
+        left: 80px;
+        width: 25px;
+        height: 10px;
+        background: #b22222;
+        border-radius: 3px;
+        z-index: 1;
+      "></div>
+      <div style="
+        position: absolute;
+        top: 30px;
+        left: 85px;
+        width: 15px;
+        height: 15px;
+        background: #b22222;
+        border-radius: 50%;
+        z-index: 1;
+      "></div>
+      <!-- 尾巴 -->
+      <div class="cat-tail" style="
+        position: absolute;
+        top: 50px;
+        left: 90px;
+        width: 35px;
+        height: 6px;
+        background: #000;
+        border-radius: 3px;
+        transform: rotate(-20deg);
+      "></div>
+      <!-- 四肢 -->
+      <div style="
+        position: absolute;
+        top: 70px;
+        left: 30px;
+        width: 12px;
+        height: 15px;
+        background: #000;
+        border-radius: 40%;
+      "></div>
+      <div style="
+        position: absolute;
+        top: 70px;
+        left: 78px;
+        width: 12px;
+        height: 15px;
+        background: #000;
+        border-radius: 40%;
+      "></div>
+      <!-- 脚掌肉垫 -->
+      <div style="
+        position: absolute;
+        top: 83px;
+        left: 30px;
+        width: 12px;
+        height: 4px;
+        background: #555;
+        border-radius: 50%;
+      "></div>
+      <div style="
+        position: absolute;
+        top: 83px;
+        left: 78px;
+        width: 12px;
+        height: 4px;
+        background: #555;
+        border-radius: 50%;
+      "></div>
+      <!-- 绿色眼睛 -->
+      <div class="cat-eyes" style="
+        position: absolute;
+        top: 30px;
+        left: 40px;
+        width: 40px;
+        height: 10px;
+        display: flex;
+        justify-content: space-between;
+      ">
+        <div style="
+          width: 10px;
+          height: 10px;
+          background: #4CAF50;
+          border-radius: 40% 60% 50% 50%;
+          position: relative;
+          overflow: hidden;
+          box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+        ">
+          <div style="
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 4px;
+            height: 6px;
+            background: #1B5E20;
+            border-radius: 30%;
+          "></div>
+          <div style="
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 3px;
+            height: 3px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+          "></div>
+        </div>
+        <div style="
+          width: 10px;
+          height: 10px;
+          background: #4CAF50;
+          border-radius: 60% 40% 50% 50%;
+          position: relative;
+          overflow: hidden;
+          box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+        ">
+          <div style="
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            width: 4px;
+            height: 6px;
+            background: #1B5E20;
+            border-radius: 30%;
+          "></div>
+          <div style="
+            position: absolute;
+            top: 1px;
+            left: 6px;
+            width: 3px;
+            height: 3px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+          "></div>
+        </div>
+      </div>
+      <!-- 鼻子和嘴 -->
+      <div style="
+        position: absolute;
+        top: 45px;
+        left: 57px;
+        width: 6px;
+        height: 6px;
+        background: #ffd700;
+        border-radius: 50%;
+      "></div>
+      <div style="
+        position: absolute;
+        top: 50px;
+        left: 58px;
+        width: 4px;
+        height: 3px;
+        border: 1px solid #333;
+        border-top: none;
+        border-radius: 0 0 3px 3px;
+      "></div>
+    </div>
+    <!-- 文字气泡 -->
+    <div class="cat-speech" style="
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 10px 18px;
+      border-radius: 15px;
+      font-size: 14px;
+      color: #333;
+      white-space: nowrap;
+      display: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 1px solid #e0e0e0;
+    "></div>
+  `;
+
+  const speechTexts = [
+    "世界这么大，要慢慢走啊。",
+    "今天的风，带着森林的气息呢。",
+    "每一步，都要踩出自己的节奏。",
+    "夜晚的星星，在听我们说话哦。",
+    "累了的话，就停下来看看云吧。",
+    "勇气，藏在每一次小小的尝试里。"
+  ];
+
+  function createPawPrint(x, y) {
+    const paw = document.createElement('div');
+    paw.innerHTML = `
+      <div style="
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 40%;
+      "></div>
+      <div style="
+        position: absolute;
+        top: -5px;
+        left: 5px;
+        width: 6px;
+        height: 6px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 40%;
+      "></div>
+      <div style="
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        width: 6px;
+        height: 6px;
+        background: rgba(0,0,0,0.5);
+        border-radius: 40%;
+      "></div>
+    `;
+    paw.style.cssText = `
+      position: absolute;
+      left: ${x}px;
+      top: ${y}px;
+      transform: rotate(${Math.random() * 30 - 15}deg);
+      opacity: 0.7;
+      transition: opacity 3s ease-out;
+    `;
+    pawContainer.appendChild(paw);
+
+    setTimeout(() => {
+      paw.style.opacity = '0';
+      setTimeout(() => paw.remove(), 3000);
+    }, 5000);
+  }
+
+  function updateCat() {
+    if (catState.isMoving && !catState.isSitting && catState.actionCooldown <= 0) {
+      const bounce = Math.sin(Date.now() * 0.005) * 2;
+      cat.style.transform = `translateY(${bounce}px)`;
+
+      const prevX = catState.x;
+      const prevY = catState.y;
+
+      catState.x += catState.directionX * catState.speed;
+      catState.y += catState.directionY * catState.speed;
+
+      const distanceMoved = Math.hypot(catState.x - prevX, catState.y - prevY);
+      catState.lastPawPosition += distanceMoved;
+
+      if (catState.lastPawPosition >= catState.pawInterval) {
+        const pawX = catState.isFlipped ? catState.x + 30 : catState.x + 80;
+        const pawY = catState.y + 85;
+        createPawPrint(pawX, pawY);
+        catState.lastPawPosition = 0;
+      }
+
+      if (catState.x <= 0 || catState.x >= window.innerWidth - 120) {
+        catState.directionX *= -1;
+        catState.isFlipped = !catState.isFlipped;
+        const catBody = cat.querySelector('.cat-body');
+        catBody.style.transform = catState.isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+        
+        const tail = cat.querySelector('.cat-tail');
+        tail.style.left = catState.isFlipped ? '5px' : '90px';
+        tail.style.transform = catState.isFlipped ? 'rotate(20deg)' : 'rotate(-20deg)';
+      }
+      if (catState.y <= 0 || catState.y >= window.innerHeight - 100) {
+        catState.directionY *= -1;
+      }
+
+      cat.style.left = `${catState.x}px`;
+      cat.style.top = `${catState.y}px`;
+
+      if (Math.random() < 0.0015) {
+        catState.isSitting = true;
+        catState.actionCooldown = 300;
+        cat.querySelector('.cat-body').style.transform = catState.isFlipped ? 'scaleX(-1) translateY(5px)' : 'translateY(5px)';
+      }
+    } else if (catState.actionCooldown > 0) {
+      catState.actionCooldown--;
+      if (catState.actionCooldown === 0 && catState.isSitting) {
+        catState.isSitting = false;
+        cat.querySelector('.cat-body').style.transform = catState.isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+      }
+    } else {
+      cat.style.transform = 'translateY(0)';
+    }
+
+    requestAnimationFrame(updateCat);
+  }
+
+  cat.addEventListener('click', () => {
+    if (catState.isSitting) {
+      catState.isSitting = false;
+      catState.isMoving = true;
+      catState.actionCooldown = 0;
+      cat.querySelector('.cat-body').style.transform = catState.isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+    } else {
+      catState.isMoving = !catState.isMoving;
+      catState.actionCooldown = 200;
+    }
+
+    const speech = cat.querySelector('.cat-speech');
+    speech.textContent = speechTexts[Math.floor(Math.random() * speechTexts.length)];
+    speech.style.display = 'block';
+    setTimeout(() => { 
+      speech.style.opacity = '0';
+      setTimeout(() => {
+        speech.style.display = 'none';
+        speech.style.opacity = '1';
+      }, 500);
+    }, 4000);
+
+    const pupils = cat.querySelectorAll('.cat-eyes div div:first-child');
+    pupils.forEach(p => p.style.width = '6px');
+    setTimeout(() => {
+      pupils.forEach(p => p.style.width = '4px');
+    }, 800);
+  });
+
+  window.addEventListener('resize', () => {
+    catState.x = Math.min(catState.x, window.innerWidth - 120);
+    catState.y = Math.min(catState.y, window.innerHeight - 100);
+    cat.style.left = `${catState.x}px`;
+    cat.style.top = `${catState.y}px`;
+  });
+
+  updateCat();
+});
+</script>
+
+<!-- 5. 博文标题点击炸开特效 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // 匹配 Fluid 主题博文标题
-  const postTitles = document.querySelectorAll('.post-item .post-title a, .post-header .post-title a');
-  
-  if (postTitles.length === 0) return;
+  const postTitles = document.querySelectorAll('.index-header a');
   
   postTitles.forEach(title => {
     title.style.opacity = 1;
+  });
+  
+  postTitles.forEach(title => {
     title.addEventListener('click', function(e) {
       const titleText = this.textContent.trim();
-      if (!titleText || !this.href) return;
+      if (!titleText) return;
       
       e.preventDefault();
       const targetUrl = this.href;
@@ -254,9 +786,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       this.style.opacity = 0;
       
-      // 生成文字粒子
       for (let i = 0; i < titleText.length; i++) {
-        for (let j = 0; j < 3; j++) {
+        for (let j = 0; j < 4; j++) {
           const particle = document.createElement('span');
           particle.textContent = titleText[i];
           particle.style.cssText = `
@@ -284,7 +815,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      // 特效结束后跳转
       setTimeout(() => {
         this.style.opacity = 1;
         window.location.href = targetUrl;
@@ -299,17 +829,15 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-<!-- 5. 导航栏 + Banner 文字样式 -->
+
+<!-- 6. 全局样式 -->
 <style>
-/* 导航栏品牌文字彩虹效果 */
+/* 导航栏彩虹效果 */
 .navbar-brand strong {
   color: #fff !important;
   font-weight: bold !important;
   transition: all 0.3s ease !important;
-  position: relative;
-  overflow: hidden;
 }
-
 .navbar-brand:hover strong {
   background: linear-gradient(90deg, 
     #ff0000, #ff9900, #ffff00, 
@@ -320,16 +848,12 @@ document.addEventListener('DOMContentLoaded', function() {
   background-clip: text !important;
   color: transparent !important;
   animation: rainbow 2s linear infinite !important;
-  text-shadow: 0 0 10px rgba(255,255,255,0.3) !important;
 }
 
-/* 导航链接彩虹效果 */
 .nav-link span {
   color: #fff !important;
   transition: all 0.3s ease !important;
-  position: relative;
 }
-
 .nav-link:hover span {
   background: linear-gradient(90deg, 
     #ff0000, #ff9900, #ffff00, 
@@ -340,403 +864,41 @@ document.addEventListener('DOMContentLoaded', function() {
   background-clip: text !important;
   color: transparent !important;
   animation: rainbow 2s linear infinite !important;
-  transform: translateY(-1px) !important;
 }
 
-/* 彩虹动画 */
 @keyframes rainbow {
   0% { background-position: 0% 50%; }
   100% { background-position: 300% 50%; }
 }
 
-/* 导航栏基础样式 */
+/* 其他样式优化 */
 .navbar-brand, .nav-link {
   background: none !important;
   color: #fff !important;
 }
-
 .navbar-brand:focus strong,
 .nav-link:focus span {
   color: #fff !important;
   outline: none !important;
 }
 
-/* 首页头部链接样式 */
 .index-header a {
   display: inline-block !important;
   transition: opacity 0.3s ease !important;
 }
 
-.index-header a:hover {
-  opacity: 0.8 !important;
-  transform: translateY(-1px) !important;
-}
-
-/* Banner 遮罩层样式 */
 .banner .mask {
   background-color: rgba(0,0,0,0.4) !important;
-  backdrop-filter: blur(2px) !important;
 }
-
-/* Banner 文字样式 */
 .banner-text span {
   color: #fff !important;
   font-weight: bold !important;
-  text-shadow: 0 0 8px rgba(0,0,0,0.8) !important;
-  letter-spacing: 0.5px !important;
 }
 
-/* 导航栏下拉菜单样式 */
-.dropdown-menu {
-  backdrop-filter: blur(10px) !important;
-  background: rgba(255,255,255,0.95) !important;
-  border: 1px solid rgba(255,255,255,0.2) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
-}
-
-.dropdown-item:hover {
-  background: rgba(102, 126, 234, 0.1) !important;
-}
-
-/* 移动端导航菜单样式 */
-@media (max-width: 991.98px) {
-  .navbar-collapse {
-    backdrop-filter: blur(10px) !important;
-    background: rgba(255,255,255,0.95) !important;
-    border-radius: 10px !important;
-    margin-top: 10px !important;
-    padding: 15px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
-  }
-  
-  .nav-link span {
-    color: #333 !important;
-  }
-}
-
-/* 导航栏滚动效果 */
-.navbar-scrolled {
-  backdrop-filter: blur(10px) !important;
-  background: rgba(255,255,255,0.95) !important;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.1) !important;
-}
-
-.navbar-scrolled .navbar-brand strong,
-.navbar-scrolled .nav-link span {
-  color: #333 !important;
-}
-
-.navbar-scrolled .navbar-brand:hover strong,
-.navbar-scrolled .nav-link:hover span {
-  background: linear-gradient(90deg, 
-    #ff0000, #ff9900, #ffff00, 
-    #33cc33, #3366ff, #9933ff, #ff33cc
-  ) !important;
-  background-size: 300% 100% !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-}
-
-/* 活动链接指示器 */
-.nav-link.active span {
-  position: relative !important;
-}
-
-.nav-link.active span::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, #667eea, #764ba2) !important;
-  border-radius: 2px;
-}
-</style>
-
-<script>
-// 导航栏滚动效果
-document.addEventListener('DOMContentLoaded', function() {
-  const navbar = document.querySelector('.navbar');
-  if (!navbar) return;
-  
-  // 滚动监听
-  window.addEventListener('scroll', function() {
-    if (window.scrollY > 50) {
-      navbar.classList.add('navbar-scrolled');
-    } else {
-      navbar.classList.remove('navbar-scrolled');
-    }
-  });
-  
-  // 设置当前活动链接
-  const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll('.nav-link');
-  
-  navLinks.forEach(link => {
-    const linkPath = link.getAttribute('href');
-    if (linkPath && currentPath.includes(linkPath) && linkPath !== '/') {
-      link.classList.add('active');
-    }
-  });
-});
-</script>
-<!-- 6. 背景音乐播放器（免版权音乐版） -->
-<div id="music-player" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
-  <audio id="bg-music" loop style="display:none;">
-    <!-- 精选免版权背景音乐（多首备选） -->
-    <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg" data-name="科技氛围">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3" type="audio/mpeg" data-name="进取之心">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-gathering-of-the-tribes-174.mp3" type="audio/mpeg" data-name="部落聚会">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-sunny-happy-ukulele-117.mp3" type="audio/mpeg" data-name="快乐尤克里里">
-    <source src="https://assets.mixkit.co/music/preview/mixkit-memory-lane-112.mp3" type="audio/mpeg" data-name="记忆小巷">
-    您的浏览器不支持音频元素
-  </audio>
-  
-  <div id="music-controls" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.95);padding:10px 15px;border-radius:25px;box-shadow:0 8px 32px rgba(0,0,0,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);">
-    <button id="music-toggle" style="
-      width:40px;height:40px;border-radius:50%;border:none;
-      background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color:white;cursor:pointer;font-size:16px;transition:all 0.3s ease;
-    " title="播放/暂停">▶</button>
-    
-    <div style="flex:1;min-width:120px;">
-      <div id="music-info" style="font-size:12px;color:#666;margin-bottom:4px;">背景音乐</div>
-      <div style="background:#eee;border-radius:3px;height:4px;overflow:hidden;">
-        <div id="music-progress" style="height:100%;background:linear-gradient(90deg, #667eea, #764ba2);width:0%;transition:width 0.1s;"></div>
-      </div>
-    </div>
-    
-    <div style="display:flex;align-items:center;gap:5px;">
-      <button id="prev-music" style="background:none;border:none;cursor:pointer;font-size:12px;color:#666;" title="上一首">⏮</button>
-      <button id="next-music" style="background:none;border:none;cursor:pointer;font-size:12px;color:#666;" title="下一首">⏭</button>
-      <button id="volume-btn" style="background:none;border:none;cursor:pointer;font-size:14px;color:#666;" title="音量">🔊</button>
-    </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const music = document.getElementById('bg-music');
-  const toggleBtn = document.getElementById('music-toggle');
-  const progressBar = document.getElementById('music-progress');
-  const musicInfo = document.getElementById('music-info');
-  const volumeBtn = document.getElementById('volume-btn');
-  const prevBtn = document.getElementById('prev-music');
-  const nextBtn = document.getElementById('next-music');
-  
-  let isPlaying = false;
-  let userInteracted = false;
-  let currentTrack = 0;
-  const tracks = Array.from(music.querySelectorAll('source'));
-  
-  console.log(`找到 ${tracks.length} 首背景音乐`);
-  
-  // 标记用户已交互
-  function enableAudio() {
-    if (!userInteracted) {
-      userInteracted = true;
-      console.log('用户已与页面交互，可以播放音乐');
-    }
-  }
-  
-  // 监听用户交互
-  document.addEventListener('click', enableAudio);
-  document.addEventListener('touchstart', enableAudio);
-  document.addEventListener('keydown', enableAudio);
-  
-  // 切换到指定曲目
-  function switchTrack(trackIndex) {
-    if (trackIndex < 0) trackIndex = tracks.length - 1;
-    if (trackIndex >= tracks.length) trackIndex = 0;
-    
-    currentTrack = trackIndex;
-    const track = tracks[currentTrack];
-    music.src = track.src;
-    musicInfo.textContent = `背景音乐 - ${track.getAttribute('data-name')}`;
-    
-    console.log(`切换到: ${track.getAttribute('data-name')}`);
-    
-    // 如果正在播放，立即播放新曲目
-    if (isPlaying) {
-      music.play().catch(error => {
-        console.log('自动播放新曲目失败:', error);
-      });
-    }
-  }
-  
-  // 更新播放进度
-  music.addEventListener('timeupdate', function() {
-    if (music.duration) {
-      const progress = (music.currentTime / music.duration) * 100;
-      progressBar.style.width = progress + '%';
-    }
-  });
-  
-  // 播放/暂停
-  toggleBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
-    
-    if (isPlaying) {
-      music.pause();
-      isPlaying = false;
-      toggleBtn.innerHTML = '▶';
-      toggleBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-      console.log('音乐已暂停');
-    } else {
-      if (userInteracted) {
-        music.play().then(() => {
-          isPlaying = true;
-          toggleBtn.innerHTML = '⏸';
-          toggleBtn.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-          console.log('音乐开始播放:', tracks[currentTrack].getAttribute('data-name'));
-        }).catch(error => {
-          console.log('播放失败:', error);
-        });
-      } else {
-        // 提示用户先交互
-        const originalHTML = toggleBtn.innerHTML;
-        toggleBtn.innerHTML = '👆';
-        toggleBtn.style.background = 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)';
-        
-        setTimeout(() => {
-          toggleBtn.innerHTML = originalHTML;
-          toggleBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        }, 1000);
-      }
-    }
-  });
-  
-  // 上一首/下一首
-  prevBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
-    switchTrack(currentTrack - 1);
-  });
-  
-  nextBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
-    switchTrack(currentTrack + 1);
-  });
-  
-  // 音量控制
-  volumeBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    enableAudio();
-    
-    if (music.volume > 0) {
-      music.volume = 0;
-      volumeBtn.innerHTML = '🔇';
-      volumeBtn.title = '音量: 静音';
-    } else {
-      music.volume = 0.3;
-      volumeBtn.innerHTML = '🔊';
-      volumeBtn.title = '音量: 30%';
-    }
-  });
-  
-  // 鼠标悬停效果
-  [toggleBtn, prevBtn, nextBtn, volumeBtn].forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-      this.style.transform = 'scale(1.1)';
-    });
-    
-    btn.addEventListener('mouseleave', function() {
-      this.style.transform = 'scale(1)';
-    });
-  });
-  
-  // 音乐事件处理
-  music.addEventListener('loadeddata', function() {
-    console.log('音乐文件加载成功');
-    music.volume = 0.3; // 30%音量
-  });
-  
-  music.addEventListener('ended', function() {
-    // 循环播放
-    music.currentTime = 0;
-    music.play();
-  });
-  
-  music.addEventListener('error', function(e) {
-    console.error('音乐加载失败:', e);
-    // 自动切换到下一首
-    setTimeout(() => {
-      switchTrack(currentTrack + 1);
-    }, 1000);
-  });
-  
-  // 初始化第一首曲目
-  switchTrack(0);
-  
-  // 键盘快捷键
-  document.addEventListener('keydown', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    
-    switch(e.code) {
-      case 'Space':
-        e.preventDefault();
-        toggleBtn.click();
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        prevBtn.click();
-        break;
-      case 'ArrowRight':
-        e.preventDefault();
-        nextBtn.click();
-        break;
-      case 'KeyM':
-        e.preventDefault();
-        volumeBtn.click();
-        break;
-    }
-  });
-  
-  console.log('背景音乐播放器已加载完成！');
-  console.log('快捷键: 空格=播放/暂停, ←/→=切换曲目, M=静音');
-});
-</script>
-
-<style>
-/* 音乐播放器响应式设计 */
-@media (max-width: 768px) {
-  #music-controls {
-    padding: 8px 12px !important;
-  }
-  #music-info {
-    font-size: 10px !important;
-  }
-}
-
-/* 音乐播放器动画 */
-#music-player {
-  animation: slideInUp 0.5s ease-out;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 播放时的脉动效果 */
-#music-toggle.playing {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+/* 确保博文内容层级高于背景 */
+.post-content {
+  position: relative;
+  z-index: 10;
 }
 </style>
 </body>
