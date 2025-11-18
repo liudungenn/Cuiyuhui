@@ -16,14 +16,6 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
   </header>
 
   <main>
-    <!-- 新增 banner 容器（特效载体，必须保留） -->
-    <div id="banner" style="position:relative; width:100%; height:400px; overflow:hidden;">
-      <!-- banner 标题可自行添加，示例： -->
-      <div class="banner-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; text-align:center;">
-        <span style="font-size:2.5rem; margin-bottom:1rem; display:block;">请和小猫咪互动吧</span>
-        <span style="font-size:1.2rem;">大胆是一辆很可爱的大胖猫呢</span>
-      </div>
-    </div>
 
     <% if(is_post() || page.layout === '404') { %>
       <%- body %>
@@ -659,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
         position: absolute;
         width: 8px;
         height: 8px;
-        background: rgba(0,0,0,0.5);
+        background: rgba(245,245,220,0.8);
         border-radius: 40%;
       "></div>
       <div style="
@@ -668,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         left: 5px;
         width: 6px;
         height: 6px;
-        background: rgba(0,0,0,0.5);
+        background: rgba(245,245,220,0.8);
         border-radius: 40%;
       "></div>
       <div style="
@@ -677,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
         left: -5px;
         width: 6px;
         height: 6px;
-        background: rgba(0,0,0,0.5);
+        background: rgba(245,245,220,0.8);
         border-radius: 40%;
       "></div>
     `;
