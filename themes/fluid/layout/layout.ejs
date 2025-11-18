@@ -70,360 +70,180 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
     <div class="noscript-warning"><%- __('noscript_warning') %></div>
   </noscript>
 
-<!-- ==================== 自定义特效区域 ==================== -->
+<!-- 放在 _layout.ejs 的 </body> 前面 -->
 
-<!-- 1. 全局烟花背景特效 -->
+<!-- 1. 烟花背景特效（保留） -->
 <canvas id="fireworks" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;background:transparent;"></canvas>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const c = document.getElementById("fireworks");
-  if (!c) return;
-  
-  const ctx = c.getContext("2d");
-  
-  function resizeCanvas() {
-    c.width = window.innerWidth;
-    c.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+const c = document.getElementById("fireworks");
+const ctx = c.getContext("2d");
+function resizeCanvas() {
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
-  class Particle {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-      this.size = Math.random() * 3 + 1;
-      this.vx = (Math.random() - 0.5) * 6;
-      this.vy = (Math.random() - 0.5) * 6;
-      this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
-      this.life = 30;
-    }
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
-      this.size *= 0.95;
-      this.life--;
-    }
-    draw() {
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = Math.random() * 3 + 1;
+    this.vx = (Math.random() - 0.5) * 6;
+    this.vy = (Math.random() - 0.5) * 6;
+    this.color = `rgb(${Math.random()*255|0},${Math.random()*255|0},${Math.random()*255|0})`;
+    this.life = 30;
   }
-
-  let particles = [];
-  document.addEventListener('mousemove', (e) => {
-    for (let i = 0; i < 3; i++) {
-      particles.push(new Particle(e.clientX, e.clientY));
-    }
-  });
-
-  function animateFireworks() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)";
-    ctx.fillRect(0, 0, c.width, c.height);
-    for (let i = particles.length - 1; i >= 0; i--) {
-      particles[i].update();
-      particles[i].draw();
-      if (particles[i].life <= 0) {
-        particles.splice(i, 1);
-      }
-    }
-    requestAnimationFrame(animateFireworks);
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.size *= 0.95;
+    this.life--;
   }
-  animateFireworks();
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+let particles = [];
+document.addEventListener('mousemove', (e) => {
+  for (let i = 0; i < 3; i++) {
+    particles.push(new Particle(e.clientX, e.clientY));
+  }
 });
+
+function animateFireworks() {
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0, 0, c.width, c.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].draw();
+    if (particles[i].life <= 0) {
+      particles.splice(i, 1);
+    }
+  }
+  requestAnimationFrame(animateFireworks);
+}
+animateFireworks();
 </script>
 
-<!-- 2. Banner 背景 + Hover 烟花特效（修复版） -->
+<!-- 2. banner 背景（图片/视频双模式）+ hover 烟花特效（保留） -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(function() {
-    const useVideoBanner = false; // true=视频，false=图片
-    
-    // 多种选择器尝试找到banner
-    let banner = document.getElementById('banner');
-    if (!banner) {
-      banner = document.querySelector('.banner, #board, [class*="banner"], .index-header, .header-wrap');
-      console.log('尝试查找banner:', banner);
-    }
-    
-    if (!banner) {
-      console.log('未找到banner元素');
-      return;
-    }
-
-    // 设置banner样式
-    banner.style.position = 'relative';
-    banner.style.overflow = 'hidden';
-
-    if (useVideoBanner) {
-      // 视频背景
-      const video = document.createElement('video');
-      video.src = '/video/banner-video.mp4';
-      video.autoplay = true;
-      video.loop = true;
-      video.muted = true;
-      video.playbackRate = 0.8;
-      video.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        z-index: 0;
-      `;
-      banner.appendChild(video);
-      
-      video.addEventListener('error', () => {
-        console.log('视频加载失败，使用图片背景');
-        banner.style.background = 'url(/img/banner.jpg) no-repeat center center';
-        banner.style.backgroundSize = 'cover';
-      });
-    } else {
-      // 图片背景
-      banner.style.background = 'url(/img/banner.jpg) no-repeat center center';
+  const useVideoBanner = true; // true=视频，false=图片
+  const banner = document.getElementById('banner');
+  if (!banner) return;
+  
+  if (useVideoBanner) {
+    banner.style.background = 'none';
+    const video = document.createElement('video');
+    video.src = '/video/banner-video.mp4';
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true;
+    video.playbackRate = 0.8;
+    video.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;`;
+    banner.appendChild(video);
+    video.addEventListener('error', () => {
+      banner.style.background = 'url(/img/default.png) no-repeat center center';
       banner.style.backgroundSize = 'cover';
-    }
-
-    // 创建banner烟花canvas
-    const canvas = document.createElement('canvas');
-    canvas.id = 'banner-fireworks';
-    canvas.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    `;
-    banner.appendChild(canvas);
-
-    const ctx = canvas.getContext('2d');
-    let bannerParticles = [];
-    let isHoverBanner = false;
-    let hoverX = 0, hoverY = 0;
-
-    function resizeBannerCanvas() {
-      const rect = banner.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-    }
-
-    // 事件监听
-    banner.addEventListener('mouseenter', function() {
-      isHoverBanner = true;
-      console.log('鼠标进入banner');
     });
-    
-    banner.addEventListener('mouseleave', function() {
-      isHoverBanner = false;
-      bannerParticles = [];
-      console.log('鼠标离开banner');
-    });
-    
-    banner.addEventListener('mousemove', function(e) {
-      const rect = banner.getBoundingClientRect();
-      hoverX = e.clientX - rect.left;
-      hoverY = e.clientY - rect.top;
-    });
-
-    function createBannerParticle() {
-      if (!isHoverBanner) return;
-      
-      for (let i = 0; i < 5; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * 20 + 5;
-        const speed = Math.random() * 2 + 1;
-        
-        bannerParticles.push({
-          x: hoverX,
-          y: hoverY,
-          size: Math.random() * 4 + 2,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          color: `hsl(${Math.random() * 360}, 100%, 70%)`,
-          life: Math.random() * 40 + 30,
-          alpha: 1
-        });
-      }
-    }
-
-    // 粒子动画
-    function animateBannerFireworks() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // 只在悬停时绘制半透明背景
-      if (isHoverBanner) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      
-      // 更新和绘制粒子
-      for (let i = bannerParticles.length - 1; i >= 0; i--) {
-        const p = bannerParticles[i];
-        
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        
-        // 更新粒子状态
-        p.x += p.vx;
-        p.y += p.vy;
-        p.size *= 0.96;
-        p.life--;
-        p.alpha = p.life / 70;
-        
-        // 移除死亡粒子
-        if (p.life <= 0 || p.size < 0.1) {
-          bannerParticles.splice(i, 1);
-        }
-      }
-      
-      requestAnimationFrame(animateBannerFireworks);
-    }
-
-    // 初始化
-    resizeBannerCanvas();
-    window.addEventListener('resize', resizeBannerCanvas);
-    
-    // 创建粒子的间隔
-    setInterval(createBannerParticle, 80);
-    
-    // 开始动画
-    animateBannerFireworks();
-    
-    console.log('Banner烟花特效已加载');
-    
-  }, 500);
-});
-</script>
-
-<!-- 3. 博文内容区域静态网格 -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // 仅在博文页面显示
-  const contentContainer = document.querySelector('.post-content, .markdown-body');
-  if (!contentContainer) return;
-
-  // 创建canvas元素
-  const canvas = document.createElement('canvas');
-  canvas.id = 'gridCanvas';
-  canvas.style.cssText = `
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    background: transparent;
-    pointer-events: none;
-    opacity: 0.3;
-  `;
-  
-  // 确保内容容器有相对定位
-  contentContainer.style.position = 'relative';
-  
-  // 将canvas插入到内容容器的最前面
-  contentContainer.insertBefore(canvas, contentContainer.firstChild);
-  
-  const ctx = canvas.getContext('2d');
-  let width, height;
-  const gap = 30;
-
-  function resizeCanvas() {
-    const rect = contentContainer.getBoundingClientRect();
-    width = rect.width;
-    height = rect.height;
-    
-    canvas.width = width;
-    canvas.height = height;
-    
-    drawGrid();
-  }
-
-  function drawGrid() {
-    ctx.clearRect(0, 0, width, height);
-    ctx.strokeStyle = 'rgba(200, 200, 200, 0.5)';
-    ctx.lineWidth = 0.5;
-
-    // 横线
-    for (let y = 0; y < height; y += gap) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-
-    // 竖线
-    for (let x = 0; x < width; x += gap) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-  }
-
-  // 使用ResizeObserver监听尺寸变化
-  if ('ResizeObserver' in window) {
-    const resizeObserver = new ResizeObserver(resizeCanvas);
-    resizeObserver.observe(contentContainer);
   } else {
-    window.addEventListener('resize', resizeCanvas);
+    banner.style.background = 'url(/img/default.png) no-repeat center center';
+    banner.style.backgroundSize = 'cover';
   }
-  
-  // 初始绘制
-  setTimeout(resizeCanvas, 100);
-});
 
-// 确保内容在网格上层的样式
-const style = document.createElement('style');
-style.textContent = `
-  .post-content > *:not(#gridCanvas),
-  .markdown-body > *:not(#gridCanvas) {
-    position: relative;
-    z-index: 1;
+  // banner hover 烟花
+  const canvas = document.createElement('canvas');
+  canvas.id = 'banner-fireworks';
+  canvas.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;background:transparent;";
+  banner.appendChild(canvas);
+  
+  function resizeBannerCanvas() {
+    const rect = banner.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    canvas.style.top = `${rect.top}px`;
+    canvas.style.left = `${rect.left}px`;
   }
-`;
-document.head.appendChild(style);
-</script>
-
-<!-- 4. 博文标题点击炸开特效 -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // 扩展选择器范围
-  const selectors = [
-    '.post-item .post-title a',
-    '.post-header .post-title a',
-    'article h1 a',
-    'article h2 a',
-    '.markdown-body h1 a',
-    '.markdown-body h2 a'
-  ];
+  resizeBannerCanvas();
+  window.addEventListener('resize', resizeBannerCanvas);
   
-  let postTitles = [];
-  selectors.forEach(selector => {
-    const found = document.querySelectorAll(selector);
-    if (found.length > 0) {
-      postTitles = [...postTitles, ...found];
-    }
+  const ctx2 = canvas.getContext("2d");
+  let bannerParticles = [];
+  let isHoverBanner = false;
+  let hoverX = 0, hoverY = 0;
+  
+  banner.addEventListener('mouseenter', () => isHoverBanner = true);
+  banner.addEventListener('mouseleave', () => isHoverBanner = false);
+  banner.addEventListener('mousemove', (e) => {
+    const rect = banner.getBoundingClientRect();
+    hoverX = e.clientX - rect.left;
+    hoverY = e.clientY - rect.top;
   });
   
-  console.log('找到的标题数量:', postTitles.length);
+  function createBannerParticle() {
+    if (!isHoverBanner) return;
+    const centerX = hoverX;
+    const centerY = hoverY;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const distance = Math.random() * 15 + 5;
+      bannerParticles.push({
+        x: centerX + Math.cos(angle) * distance,
+        y: centerY + Math.sin(angle) * distance,
+        size: Math.random() * 3 + 2,
+        vx: Math.cos(angle) * (Math.random() * 2 + 1),
+        vy: Math.sin(angle) * (Math.random() * 2 + 1),
+        color: `rgb(${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)},${Math.floor(Math.random()*220+35)})`,
+        life: Math.random() * 30 + 20
+      });
+    }
+  }
+  
+  setInterval(createBannerParticle, 100);
+  
+  function animateBannerFireworks() {
+    ctx2.clearRect(0, 0, canvas.width, canvas.height);
+    if (isHoverBanner) {
+      ctx2.fillStyle = "rgba(0,0,0,0.1)";
+      ctx2.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    for (let i = bannerParticles.length - 1; i >= 0; i--) {
+      const p = bannerParticles[i];
+      ctx2.fillStyle = p.color;
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx2.fill();
+      
+      p.x += p.vx;
+      p.y += p.vy;
+      p.size *= 0.97;
+      p.life--;
+      
+      if (p.life <= 0) bannerParticles.splice(i, 1);
+    }
+    requestAnimationFrame(animateBannerFireworks);
+  }
+  animateBannerFireworks();
+});
+</script>
+
+
+<!-- 4. 博文标题点击炸开特效（保留） -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 匹配 Fluid 主题博文标题
+  const postTitles = document.querySelectorAll('.post-item .post-title a, .post-header .post-title a');
   
   if (postTitles.length === 0) return;
   
   postTitles.forEach(title => {
-    title.style.opacity = '1';
-    title.style.cursor = 'pointer';
-    title.style.transition = 'opacity 0.3s ease';
-    
+    title.style.opacity = 1;
     title.addEventListener('click', function(e) {
       const titleText = this.textContent.trim();
       if (!titleText || !this.href) return;
@@ -432,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const targetUrl = this.href;
       const rect = this.getBoundingClientRect();
       
-      this.style.opacity = '0';
+      this.style.opacity = 0;
       
       // 生成文字粒子
       for (let i = 0; i < titleText.length; i++) {
@@ -457,20 +277,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const angle = Math.random() * Math.PI * 2;
             const distance = 30 + Math.random() * 40;
             particle.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) rotate(${Math.random()*60-30}deg)`;
-            particle.style.opacity = '0';
+            particle.style.opacity = 0;
           }, 30);
           
-          setTimeout(() => {
-            if (particle.parentNode) {
-              particle.parentNode.removeChild(particle);
-            }
-          }, 500);
+          setTimeout(() => particle.remove(), 500);
         }
       }
       
       // 特效结束后跳转
       setTimeout(() => {
-        this.style.opacity = '1';
+        this.style.opacity = 1;
         window.location.href = targetUrl;
       }, 300);
     });
@@ -478,19 +294,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.addEventListener('popstate', function() {
     postTitles.forEach(title => {
-      title.style.opacity = '1';
+      title.style.opacity = 1;
     });
   });
 });
 </script>
-
 <!-- 5. 导航栏 + Banner 文字样式 -->
 <style>
+/* 导航栏品牌文字彩虹效果 */
 .navbar-brand strong {
   color: #fff !important;
   font-weight: bold !important;
   transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
 }
+
 .navbar-brand:hover strong {
   background: linear-gradient(90deg, 
     #ff0000, #ff9900, #ffff00, 
@@ -501,12 +320,16 @@ document.addEventListener('DOMContentLoaded', function() {
   background-clip: text !important;
   color: transparent !important;
   animation: rainbow 2s linear infinite !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3) !important;
 }
 
+/* 导航链接彩虹效果 */
 .nav-link span {
   color: #fff !important;
   transition: all 0.3s ease !important;
+  position: relative;
 }
+
 .nav-link:hover span {
   background: linear-gradient(90deg, 
     #ff0000, #ff9900, #ffff00, 
@@ -517,42 +340,405 @@ document.addEventListener('DOMContentLoaded', function() {
   background-clip: text !important;
   color: transparent !important;
   animation: rainbow 2s linear infinite !important;
+  transform: translateY(-1px) !important;
 }
 
+/* 彩虹动画 */
 @keyframes rainbow {
   0% { background-position: 0% 50%; }
   100% { background-position: 300% 50%; }
 }
 
+/* 导航栏基础样式 */
 .navbar-brand, .nav-link {
   background: none !important;
   color: #fff !important;
 }
+
 .navbar-brand:focus strong,
 .nav-link:focus span {
   color: #fff !important;
   outline: none !important;
 }
 
+/* 首页头部链接样式 */
 .index-header a {
   display: inline-block !important;
   transition: opacity 0.3s ease !important;
 }
 
+.index-header a:hover {
+  opacity: 0.8 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Banner 遮罩层样式 */
 .banner .mask {
   background-color: rgba(0,0,0,0.4) !important;
+  backdrop-filter: blur(2px) !important;
 }
+
+/* Banner 文字样式 */
 .banner-text span {
   color: #fff !important;
   font-weight: bold !important;
   text-shadow: 0 0 8px rgba(0,0,0,0.8) !important;
+  letter-spacing: 0.5px !important;
 }
 
-/* 网格背景样式补充 */
-.post-content, .markdown-body {
+/* 导航栏下拉菜单样式 */
+.dropdown-menu {
+  backdrop-filter: blur(10px) !important;
+  background: rgba(255,255,255,0.95) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+}
+
+.dropdown-item:hover {
+  background: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 移动端导航菜单样式 */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    backdrop-filter: blur(10px) !important;
+    background: rgba(255,255,255,0.95) !important;
+    border-radius: 10px !important;
+    margin-top: 10px !important;
+    padding: 15px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+  }
+  
+  .nav-link span {
+    color: #333 !important;
+  }
+}
+
+/* 导航栏滚动效果 */
+.navbar-scrolled {
+  backdrop-filter: blur(10px) !important;
+  background: rgba(255,255,255,0.95) !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.1) !important;
+}
+
+.navbar-scrolled .navbar-brand strong,
+.navbar-scrolled .nav-link span {
+  color: #333 !important;
+}
+
+.navbar-scrolled .navbar-brand:hover strong,
+.navbar-scrolled .nav-link:hover span {
+  background: linear-gradient(90deg, 
+    #ff0000, #ff9900, #ffff00, 
+    #33cc33, #3366ff, #9933ff, #ff33cc
+  ) !important;
+  background-size: 300% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* 活动链接指示器 */
+.nav-link.active span {
   position: relative !important;
+}
+
+.nav-link.active span::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #667eea, #764ba2) !important;
+  border-radius: 2px;
 }
 </style>
 
+<script>
+// 导航栏滚动效果
+document.addEventListener('DOMContentLoaded', function() {
+  const navbar = document.querySelector('.navbar');
+  if (!navbar) return;
+  
+  // 滚动监听
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 50) {
+      navbar.classList.add('navbar-scrolled');
+    } else {
+      navbar.classList.remove('navbar-scrolled');
+    }
+  });
+  
+  // 设置当前活动链接
+  const currentPath = window.location.pathname;
+  const navLinks = document.querySelectorAll('.nav-link');
+  
+  navLinks.forEach(link => {
+    const linkPath = link.getAttribute('href');
+    if (linkPath && currentPath.includes(linkPath) && linkPath !== '/') {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+<!-- 6. 背景音乐播放器（免版权音乐版） -->
+<div id="music-player" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
+  <audio id="bg-music" loop style="display:none;">
+    <!-- 精选免版权背景音乐（多首备选） -->
+    <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg" data-name="科技氛围">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3" type="audio/mpeg" data-name="进取之心">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-gathering-of-the-tribes-174.mp3" type="audio/mpeg" data-name="部落聚会">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-sunny-happy-ukulele-117.mp3" type="audio/mpeg" data-name="快乐尤克里里">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-memory-lane-112.mp3" type="audio/mpeg" data-name="记忆小巷">
+    您的浏览器不支持音频元素
+  </audio>
+  
+  <div id="music-controls" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.95);padding:10px 15px;border-radius:25px;box-shadow:0 8px 32px rgba(0,0,0,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);">
+    <button id="music-toggle" style="
+      width:40px;height:40px;border-radius:50%;border:none;
+      background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:white;cursor:pointer;font-size:16px;transition:all 0.3s ease;
+    " title="播放/暂停">▶</button>
+    
+    <div style="flex:1;min-width:120px;">
+      <div id="music-info" style="font-size:12px;color:#666;margin-bottom:4px;">背景音乐</div>
+      <div style="background:#eee;border-radius:3px;height:4px;overflow:hidden;">
+        <div id="music-progress" style="height:100%;background:linear-gradient(90deg, #667eea, #764ba2);width:0%;transition:width 0.1s;"></div>
+      </div>
+    </div>
+    
+    <div style="display:flex;align-items:center;gap:5px;">
+      <button id="prev-music" style="background:none;border:none;cursor:pointer;font-size:12px;color:#666;" title="上一首">⏮</button>
+      <button id="next-music" style="background:none;border:none;cursor:pointer;font-size:12px;color:#666;" title="下一首">⏭</button>
+      <button id="volume-btn" style="background:none;border:none;cursor:pointer;font-size:14px;color:#666;" title="音量">🔊</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const music = document.getElementById('bg-music');
+  const toggleBtn = document.getElementById('music-toggle');
+  const progressBar = document.getElementById('music-progress');
+  const musicInfo = document.getElementById('music-info');
+  const volumeBtn = document.getElementById('volume-btn');
+  const prevBtn = document.getElementById('prev-music');
+  const nextBtn = document.getElementById('next-music');
+  
+  let isPlaying = false;
+  let userInteracted = false;
+  let currentTrack = 0;
+  const tracks = Array.from(music.querySelectorAll('source'));
+  
+  console.log(`找到 ${tracks.length} 首背景音乐`);
+  
+  // 标记用户已交互
+  function enableAudio() {
+    if (!userInteracted) {
+      userInteracted = true;
+      console.log('用户已与页面交互，可以播放音乐');
+    }
+  }
+  
+  // 监听用户交互
+  document.addEventListener('click', enableAudio);
+  document.addEventListener('touchstart', enableAudio);
+  document.addEventListener('keydown', enableAudio);
+  
+  // 切换到指定曲目
+  function switchTrack(trackIndex) {
+    if (trackIndex < 0) trackIndex = tracks.length - 1;
+    if (trackIndex >= tracks.length) trackIndex = 0;
+    
+    currentTrack = trackIndex;
+    const track = tracks[currentTrack];
+    music.src = track.src;
+    musicInfo.textContent = `背景音乐 - ${track.getAttribute('data-name')}`;
+    
+    console.log(`切换到: ${track.getAttribute('data-name')}`);
+    
+    // 如果正在播放，立即播放新曲目
+    if (isPlaying) {
+      music.play().catch(error => {
+        console.log('自动播放新曲目失败:', error);
+      });
+    }
+  }
+  
+  // 更新播放进度
+  music.addEventListener('timeupdate', function() {
+    if (music.duration) {
+      const progress = (music.currentTime / music.duration) * 100;
+      progressBar.style.width = progress + '%';
+    }
+  });
+  
+  // 播放/暂停
+  toggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    enableAudio();
+    
+    if (isPlaying) {
+      music.pause();
+      isPlaying = false;
+      toggleBtn.innerHTML = '▶';
+      toggleBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      console.log('音乐已暂停');
+    } else {
+      if (userInteracted) {
+        music.play().then(() => {
+          isPlaying = true;
+          toggleBtn.innerHTML = '⏸';
+          toggleBtn.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+          console.log('音乐开始播放:', tracks[currentTrack].getAttribute('data-name'));
+        }).catch(error => {
+          console.log('播放失败:', error);
+        });
+      } else {
+        // 提示用户先交互
+        const originalHTML = toggleBtn.innerHTML;
+        toggleBtn.innerHTML = '👆';
+        toggleBtn.style.background = 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)';
+        
+        setTimeout(() => {
+          toggleBtn.innerHTML = originalHTML;
+          toggleBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }, 1000);
+      }
+    }
+  });
+  
+  // 上一首/下一首
+  prevBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    enableAudio();
+    switchTrack(currentTrack - 1);
+  });
+  
+  nextBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    enableAudio();
+    switchTrack(currentTrack + 1);
+  });
+  
+  // 音量控制
+  volumeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    enableAudio();
+    
+    if (music.volume > 0) {
+      music.volume = 0;
+      volumeBtn.innerHTML = '🔇';
+      volumeBtn.title = '音量: 静音';
+    } else {
+      music.volume = 0.3;
+      volumeBtn.innerHTML = '🔊';
+      volumeBtn.title = '音量: 30%';
+    }
+  });
+  
+  // 鼠标悬停效果
+  [toggleBtn, prevBtn, nextBtn, volumeBtn].forEach(btn => {
+    btn.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.1)';
+    });
+    
+    btn.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+    });
+  });
+  
+  // 音乐事件处理
+  music.addEventListener('loadeddata', function() {
+    console.log('音乐文件加载成功');
+    music.volume = 0.3; // 30%音量
+  });
+  
+  music.addEventListener('ended', function() {
+    // 循环播放
+    music.currentTime = 0;
+    music.play();
+  });
+  
+  music.addEventListener('error', function(e) {
+    console.error('音乐加载失败:', e);
+    // 自动切换到下一首
+    setTimeout(() => {
+      switchTrack(currentTrack + 1);
+    }, 1000);
+  });
+  
+  // 初始化第一首曲目
+  switchTrack(0);
+  
+  // 键盘快捷键
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    switch(e.code) {
+      case 'Space':
+        e.preventDefault();
+        toggleBtn.click();
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        prevBtn.click();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        nextBtn.click();
+        break;
+      case 'KeyM':
+        e.preventDefault();
+        volumeBtn.click();
+        break;
+    }
+  });
+  
+  console.log('背景音乐播放器已加载完成！');
+  console.log('快捷键: 空格=播放/暂停, ←/→=切换曲目, M=静音');
+});
+</script>
+
+<style>
+/* 音乐播放器响应式设计 */
+@media (max-width: 768px) {
+  #music-controls {
+    padding: 8px 12px !important;
+  }
+  #music-info {
+    font-size: 10px !important;
+  }
+}
+
+/* 音乐播放器动画 */
+#music-player {
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 播放时的脉动效果 */
+#music-toggle.playing {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+</style>
 </body>
+
 </html>
