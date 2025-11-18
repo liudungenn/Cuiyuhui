@@ -341,10 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- 4. 宫崎骏风格互动黑猫（带开关） -->
+<!-- 4. 可拖动+贴边的宫崎骏风格黑猫 -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const enableCat = true; // false 可关闭黑猫特效
+  const enableCat = true;
   if (!enableCat) return;
   
   const cat = document.createElement('div');
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     height: 100px;
     z-index: 999;
     pointer-events: auto;
-    cursor: pointer;
+    cursor: grab; /* 拖动时显示抓手图标 */
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   `;
   document.body.appendChild(cat);
@@ -373,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.body.appendChild(pawContainer);
 
+  // 猫的状态（新增拖动相关属性）
   const catState = {
     x: Math.random() * (window.innerWidth - 120),
     y: Math.random() * (window.innerHeight - 100),
@@ -384,9 +385,13 @@ document.addEventListener('DOMContentLoaded', () => {
     isSitting: false,
     actionCooldown: 0,
     lastPawPosition: 0,
-    pawInterval: 60
+    pawInterval: 60,
+    isDragging: false, // 是否正在拖动
+    offsetX: 0,        // 拖动偏移量
+    offsetY: 0
   };
 
+  // 猫的外观（不变）
   cat.innerHTML = `
     <div class="cat-body" style="
       width: 100%;
@@ -395,227 +400,38 @@ document.addEventListener('DOMContentLoaded', () => {
       transition: transform 0.3s ease;
     ">
       <!-- 躯干 -->
-      <div style="
-        position: absolute;
-        top: 40px;
-        left: 20px;
-        width: 80px;
-        height: 40px;
-        background: #000;
-        border-radius: 40% 50% 30% 30%;
-      "></div>
+      <div style="position: absolute; top: 40px; left: 20px; width: 80px; height: 40px; background: #000; border-radius: 40% 50% 30% 30%;"></div>
       <!-- 头部 -->
-      <div style="
-        position: absolute;
-        top: 15px;
-        left: 30px;
-        width: 60px;
-        height: 45px;
-        background: #000;
-        border-radius: 55% 55% 50% 50%;
-      "></div>
+      <div style="position: absolute; top: 15px; left: 30px; width: 60px; height: 45px; background: #000; border-radius: 55% 55% 50% 50%;"></div>
       <!-- 耳朵 -->
-      <div style="
-        position: absolute;
-        top: 5px;
-        left: 25px;
-        width: 0;
-        height: 0;
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 25px solid #000;
-        transform: rotate(-15deg);
-      ">
-        <div style="
-          position: absolute;
-          top: 10px;
-          left: -5px;
-          width: 0;
-          height: 0;
-          border-left: 5px solid transparent;
-          border-right: 5px solid transparent;
-          border-bottom: 15px solid #e0e0e0;
-        "></div>
+      <div style="position: absolute; top: 5px; left: 25px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 25px solid #000; transform: rotate(-15deg);">
+        <div style="position: absolute; top: 10px; left: -5px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 15px solid #e0e0e0;"></div>
       </div>
-      <div style="
-        position: absolute;
-        top: 5px;
-        left: 87px;
-        width: 0;
-        height: 0;
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 25px solid #000;
-        transform: rotate(15deg);
-      ">
-        <div style="
-          position: absolute;
-          top: 10px;
-          left: -5px;
-          width: 0;
-          height: 0;
-          border-left: 5px solid transparent;
-          border-right: 5px solid transparent;
-          border-bottom: 15px solid #e0e0e0;
-        "></div>
+      <div style="position: absolute; top: 5px; left: 87px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 25px solid #000; transform: rotate(15deg);">
+        <div style="position: absolute; top: 10px; left: -5px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 15px solid #e0e0e0;"></div>
       </div>
-      <!-- 蝴蝶结 -->
-      <div style="
-        position: absolute;
-        top: 35px;
-        left: 80px;
-        width: 25px;
-        height: 10px;
-        background: #b22222;
-        border-radius: 3px;
-        z-index: 1;
-      "></div>
-      <div style="
-        position: absolute;
-        top: 30px;
-        left: 85px;
-        width: 15px;
-        height: 15px;
-        background: #b22222;
-        border-radius: 50%;
-        z-index: 1;
-      "></div>
-      <!-- 尾巴 -->
-      <div class="cat-tail" style="
-        position: absolute;
-        top: 50px;
-        left: 90px;
-        width: 35px;
-        height: 6px;
-        background: #000;
-        border-radius: 3px;
-        transform: rotate(-20deg);
-      "></div>
+     <!-- 尾巴 -->
+      <div class="cat-tail" style="position: absolute; top: 50px; left: 90px; width: 35px; height: 6px; background: #000; border-radius: 3px; transform: rotate(-20deg);"></div>
       <!-- 四肢 -->
-      <div style="
-        position: absolute;
-        top: 70px;
-        left: 30px;
-        width: 12px;
-        height: 15px;
-        background: #000;
-        border-radius: 40%;
-      "></div>
-      <div style="
-        position: absolute;
-        top: 70px;
-        left: 78px;
-        width: 12px;
-        height: 15px;
-        background: #000;
-        border-radius: 40%;
-      "></div>
+      <div style="position: absolute; top: 70px; left: 30px; width: 12px; height: 15px; background: #000; border-radius: 40%;"></div>
+      <div style="position: absolute; top: 70px; left: 78px; width: 12px; height: 15px; background: #000; border-radius: 40%;"></div>
       <!-- 脚掌肉垫 -->
-      <div style="
-        position: absolute;
-        top: 83px;
-        left: 30px;
-        width: 12px;
-        height: 4px;
-        background: #555;
-        border-radius: 50%;
-      "></div>
-      <div style="
-        position: absolute;
-        top: 83px;
-        left: 78px;
-        width: 12px;
-        height: 4px;
-        background: #555;
-        border-radius: 50%;
-      "></div>
+      <div style="position: absolute; top: 83px; left: 30px; width: 12px; height: 4px; background: #555; border-radius: 50%;"></div>
+      <div style="position: absolute; top: 83px; left: 78px; width: 12px; height: 4px; background: #555; border-radius: 50%;"></div>
       <!-- 绿色眼睛 -->
-      <div class="cat-eyes" style="
-        position: absolute;
-        top: 30px;
-        left: 40px;
-        width: 40px;
-        height: 10px;
-        display: flex;
-        justify-content: space-between;
-      ">
-        <div style="
-          width: 10px;
-          height: 10px;
-          background: #4CAF50;
-          border-radius: 40% 60% 50% 50%;
-          position: relative;
-          overflow: hidden;
-          box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
-        ">
-          <div style="
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            width: 4px;
-            height: 6px;
-            background: #1B5E20;
-            border-radius: 30%;
-          "></div>
-          <div style="
-            position: absolute;
-            top: 1px;
-            left: 1px;
-            width: 3px;
-            height: 3px;
-            background: rgba(255,255,255,0.9);
-            border-radius: 50%;
-          "></div>
+      <div class="cat-eyes" style="position: absolute; top: 30px; left: 40px; width: 40px; height: 10px; display: flex; justify-content: space-between;">
+        <div style="width: 10px; height: 10px; background: #4CAF50; border-radius: 40% 60% 50% 50%; position: relative; overflow: hidden; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);">
+          <div style="position: absolute; top: 2px; left: 3px; width: 4px; height: 6px; background: #1B5E20; border-radius: 30%;"></div>
+          <div style="position: absolute; top: 1px; left: 1px; width: 3px; height: 3px; background: rgba(255,255,255,0.9); border-radius: 50%;"></div>
         </div>
-        <div style="
-          width: 10px;
-          height: 10px;
-          background: #4CAF50;
-          border-radius: 60% 40% 50% 50%;
-          position: relative;
-          overflow: hidden;
-          box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
-        ">
-          <div style="
-            position: absolute;
-            top: 2px;
-            left: 3px;
-            width: 4px;
-            height: 6px;
-            background: #1B5E20;
-            border-radius: 30%;
-          "></div>
-          <div style="
-            position: absolute;
-            top: 1px;
-            left: 6px;
-            width: 3px;
-            height: 3px;
-            background: rgba(255,255,255,0.9);
-            border-radius: 50%;
-          "></div>
+        <div style="width: 10px; height: 10px; background: #4CAF50; border-radius: 60% 40% 50% 50%; position: relative; overflow: hidden; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);">
+          <div style="position: absolute; top: 2px; left: 3px; width: 4px; height: 6px; background: #1B5E20; border-radius: 30%;"></div>
+          <div style="position: absolute; top: 1px; left: 6px; width: 3px; height: 3px; background: rgba(255,255,255,0.9); border-radius: 50%;"></div>
         </div>
       </div>
       <!-- 鼻子和嘴 -->
-      <div style="
-        position: absolute;
-        top: 45px;
-        left: 57px;
-        width: 6px;
-        height: 6px;
-        background: #ffd700;
-        border-radius: 50%;
-      "></div>
-      <div style="
-        position: absolute;
-        top: 50px;
-        left: 58px;
-        width: 4px;
-        height: 3px;
-        border: 1px solid #333;
-        border-top: none;
-        border-radius: 0 0 3px 3px;
-      "></div>
+      <div style="position: absolute; top: 45px; left: 57px; width: 6px; height: 6px; background: #ffd700; border-radius: 50%;"></div>
+      <div style="position: absolute; top: 50px; left: 58px; width: 4px; height: 3px; border: 1px solid #333; border-top: none; border-radius: 0 0 3px 3px;"></div>
     </div>
     <!-- 文字气泡 -->
     <div class="cat-speech" style="
@@ -640,38 +456,21 @@ document.addEventListener('DOMContentLoaded', () => {
     "妈妈。",
     "我想吃猫条呢。",
     "喂喂喂！我需要被打屁屁。",
-    "你来找我玩儿呢吗？",
-    "大胆我呀是一只超勇敢的小猫咪呢。"
+    "大胆我呀是一只超勇敢的小猫咪呢。", 
+    "拖我到边缘，我会趴好哦～",
+    "被抓住啦！要带我去哪里？",
+    "贴在边上晒太阳真舒服～",
+    "你知道吗？我会自己找地方待着～",
+    "拖动的时候要小心我的尾巴呀～"
   ];
 
+  // 奶白色脚印（已保留你的设置）
   function createPawPrint(x, y) {
     const paw = document.createElement('div');
     paw.innerHTML = `
-      <div style="
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        background: rgba(245,245,220,0.8);
-        border-radius: 40%;
-      "></div>
-      <div style="
-        position: absolute;
-        top: -5px;
-        left: 5px;
-        width: 6px;
-        height: 6px;
-        background: rgba(245,245,220,0.8);
-        border-radius: 40%;
-      "></div>
-      <div style="
-        position: absolute;
-        top: -5px;
-        left: -5px;
-        width: 6px;
-        height: 6px;
-        background: rgba(245,245,220,0.8);
-        border-radius: 40%;
-      "></div>
+      <div style="position: absolute; width: 8px; height: 8px; background: rgba(245, 245, 220, 0.8); border-radius: 40%;"></div>
+      <div style="position: absolute; top: -5px; left: 5px; width: 6px; height: 6px; background: rgba(245, 245, 220, 0.8); border-radius: 40%;"></div>
+      <div style="position: absolute; top: -5px; left: -5px; width: 6px; height: 6px; background: rgba(245, 245, 220, 0.8); border-radius: 40%;"></div>
     `;
     paw.style.cssText = `
       position: absolute;
@@ -689,8 +488,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5000);
   }
 
+  // 拖动功能实现
+  cat.addEventListener('mousedown', (e) => {
+    catState.isDragging = true;
+    catState.isMoving = false; // 拖动时停止自动移动
+    cat.style.cursor = 'grabbing'; // 拖动中显示抓手紧握图标
+    // 计算鼠标在猫元素内的偏移量
+    catState.offsetX = e.clientX - catState.x;
+    catState.offsetY = e.clientY - catState.y;
+    // 停止默认行为避免选中文字
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!catState.isDragging) return;
+    // 根据鼠标位置和偏移量更新猫的位置
+    catState.x = e.clientX - catState.offsetX;
+    catState.y = e.clientY - catState.offsetY;
+    // 限制猫在屏幕内
+    catState.x = Math.max(0, Math.min(catState.x, window.innerWidth - 120));
+    catState.y = Math.max(0, Math.min(catState.y, window.innerHeight - 100));
+    // 更新显示位置
+    cat.style.left = `${catState.x}px`;
+    cat.style.top = `${catState.y}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!catState.isDragging) return;
+    catState.isDragging = false;
+    cat.style.cursor = 'grab';
+    // 拖动结束后检查是否贴边
+    checkEdgeSnap();
+    // 3秒后恢复自动移动
+    setTimeout(() => {
+      if (!catState.isSitting) catState.isMoving = true;
+    }, 3000);
+  });
+
+  // 贴边逻辑：距离边缘20px内自动吸附
+  function checkEdgeSnap() {
+    const edgeTolerance = 20; // 吸附触发距离
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    // 贴左边缘
+    if (catState.x <= edgeTolerance) {
+      catState.x = 0;
+      catState.isFlipped = false; // 面朝右
+      cat.querySelector('.cat-body').style.transform = 'scaleX(1)';
+      cat.querySelector('.cat-tail').style.left = '90px';
+      cat.querySelector('.cat-tail').style.transform = 'rotate(-20deg)';
+    }
+    // 贴右边缘
+    else if (catState.x >= windowWidth - 120 - edgeTolerance) {
+      catState.x = windowWidth - 120;
+      catState.isFlipped = true; // 面朝左
+      cat.querySelector('.cat-body').style.transform = 'scaleX(-1)';
+      cat.querySelector('.cat-tail').style.left = '5px';
+      cat.querySelector('.cat-tail').style.transform = 'rotate(20deg)';
+    }
+    // 贴上边缘
+    if (catState.y <= edgeTolerance) {
+      catState.y = 0;
+    }
+    // 贴下边缘
+    else if (catState.y >= windowHeight - 100 - edgeTolerance) {
+      catState.y = windowHeight - 100;
+    }
+
+    // 应用贴边后的位置
+    cat.style.left = `${catState.x}px`;
+    cat.style.top = `${catState.y}px`;
+  }
+
+  // 猫的自动移动和更新
   function updateCat() {
-    if (catState.isMoving && !catState.isSitting && catState.actionCooldown <= 0) {
+    if (catState.isMoving && !catState.isSitting && catState.actionCooldown <= 0 && !catState.isDragging) {
       const bounce = Math.sin(Date.now() * 0.005) * 2;
       cat.style.transform = `translateY(${bounce}px)`;
 
@@ -700,9 +573,21 @@ document.addEventListener('DOMContentLoaded', () => {
       catState.x += catState.directionX * catState.speed;
       catState.y += catState.directionY * catState.speed;
 
+      // 限制在屏幕内
+      if (catState.x <= 0 || catState.x >= window.innerWidth - 120) {
+        catState.directionX *= -1;
+        catState.isFlipped = !catState.isFlipped;
+        cat.querySelector('.cat-body').style.transform = catState.isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+        cat.querySelector('.cat-tail').style.left = catState.isFlipped ? '5px' : '90px';
+        cat.querySelector('.cat-tail').style.transform = catState.isFlipped ? 'rotate(20deg)' : 'rotate(-20deg)';
+      }
+      if (catState.y <= 0 || catState.y >= window.innerHeight - 100) {
+        catState.directionY *= -1;
+      }
+
+      // 移动时生成脚印
       const distanceMoved = Math.hypot(catState.x - prevX, catState.y - prevY);
       catState.lastPawPosition += distanceMoved;
-
       if (catState.lastPawPosition >= catState.pawInterval) {
         const pawX = catState.isFlipped ? catState.x + 30 : catState.x + 80;
         const pawY = catState.y + 85;
@@ -710,23 +595,10 @@ document.addEventListener('DOMContentLoaded', () => {
         catState.lastPawPosition = 0;
       }
 
-      if (catState.x <= 0 || catState.x >= window.innerWidth - 120) {
-        catState.directionX *= -1;
-        catState.isFlipped = !catState.isFlipped;
-        const catBody = cat.querySelector('.cat-body');
-        catBody.style.transform = catState.isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
-        
-        const tail = cat.querySelector('.cat-tail');
-        tail.style.left = catState.isFlipped ? '5px' : '90px';
-        tail.style.transform = catState.isFlipped ? 'rotate(20deg)' : 'rotate(-20deg)';
-      }
-      if (catState.y <= 0 || catState.y >= window.innerHeight - 100) {
-        catState.directionY *= -1;
-      }
-
       cat.style.left = `${catState.x}px`;
       cat.style.top = `${catState.y}px`;
 
+      // 随机坐下
       if (Math.random() < 0.0015) {
         catState.isSitting = true;
         catState.actionCooldown = 300;
@@ -745,6 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(updateCat);
   }
 
+  // 点击互动
   cat.addEventListener('click', () => {
     if (catState.isSitting) {
       catState.isSitting = false;
@@ -774,13 +647,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 800);
   });
 
+  // 窗口大小变化时调整位置
   window.addEventListener('resize', () => {
     catState.x = Math.min(catState.x, window.innerWidth - 120);
     catState.y = Math.min(catState.y, window.innerHeight - 100);
     cat.style.left = `${catState.x}px`;
     cat.style.top = `${catState.y}px`;
+    checkEdgeSnap(); //  resize后重新检查贴边
   });
 
+  // 初始化位置检查贴边
+  checkEdgeSnap();
   updateCat();
 });
 </script>
